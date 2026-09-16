@@ -184,17 +184,33 @@ The application integrates Artificial Intelligence to improve recruitment and jo
 
 ---
 
-## 7. Future Scope
+## 8. Specific Functional Requirements (FR)
 
-The project can be enhanced with the following features:
+- **FR-1: User Authentication & Role Assignment**: System must authenticate users via Supabase OAuth2/JWT and synchronize roles (CANDIDATE, RECRUITER, ADMIN) through backend `/auth/sync`. Role spoofing on client-side must be rejected.
+- **FR-2: Candidate Profile & Vault**: Candidates must be able to maintain living career details (Education, Experience, Skills, Certifications) and upload resumes up to 10MB validated by MIME and binary magic bytes (`%PDF-`).
+- **FR-3: Job Discovery & Multi-Criteria Filtering**: System must provide public job searching with pagination, salary filtering, work mode selection (REMOTE, HYBRID, ONSITE), and keyword matching.
+- **FR-4: Job Application Lifecycle**: Candidates must apply with selected resume and cover letter; recruiters must transition application status (`APPLIED` → `SCREENING` → `SHORTLISTED` → `INTERVIEW` → `OFFERED` / `REJECTED`).
+- **FR-5: Interview Coordination**: Recruiters must schedule virtual interviews with duration, scheduled datetime, and meeting links; candidates receive automated notifications.
+- **FR-6: AI Career Intelligence**: System must invoke Google Gemini API for 5-factor ATS scoring, categorized recommendations, target job gap analysis, and interactive STAR interview evaluation.
+- **FR-7: Communication & Alerts**: Platform must provide in-app badge alerts, transactional HTML emails for status updates, and user-configurable alert preferences.
+- **FR-8: Administrative Governance**: Admins must moderate job postings, manage user account states (`ACTIVE`, `INACTIVE`, `BLOCKED`), and dispatch system-wide broadcasts.
 
-- Real-time Chat between Candidate and Recruiter
-- Video Interview Integration
-- AI Mock Interview
-- Salary Prediction
-- Job Market Analysis
-- Multi-language Support
-- Mobile Application
-- Recommendation System using Machine Learning
-- AI Voice Interview
-- Advanced Analytics Dashboard
+---
+
+## 9. Non-Functional Requirements (NFR)
+
+- **NFR-1: Security**: Zero sensitive secrets committed to frontend. Symmetric service keys forbidden in client code. Asymmetric JWKS public keys for token validation. Non-root container execution.
+- **NFR-2: Performance**: Sub-200ms REST API response times under standard load; static assets cached for 1 year immutable via Nginx; Gzip compression enabled.
+- **NFR-3: Reliability & Resilience**: Heuristic fallback circuit-breaker when external AI APIs experience quota limits or timeouts. Non-blocking email notifications.
+- **NFR-4: Data Integrity**: Versioned Flyway migrations (`V1`, `V2`) ensuring deterministic database schema management and foreign key constraints.
+- **NFR-5: Observability**: Health check probes (`/healthz`, `/actuator/health`), client-side telemetry service, and standardized API error formatting (`ErrorResponseDTO`).
+
+---
+
+## 10. Future Scope
+
+- Real-time WebRTC video interview rooms.
+- WebSocket-based direct candidate-recruiter messaging.
+- Code execution sandbox for live technical assessments.
+- AI-driven salary benchmarking and market intelligence.
+

@@ -10,14 +10,44 @@ The database is designed using normalization principles to ensure scalability, m
 
 ---
 
-# Database Technology
-
-- Database: PostgreSQL
+- Database: PostgreSQL 15
 - Provider: Supabase
 - ORM: Hibernate (JPA)
-- Authentication: Supabase Auth
-- Storage: Supabase Storage
-- Migration Tool: Flyway (Future Enhancement)
+- Authentication: Supabase Auth (JWT with Asymmetric RS256 / ES256)
+- Storage: Supabase Storage (`resumes` bucket with RLS policies)
+- Migration Tool: Flyway (Active: `V1__initial_schema.sql`, `V2__indexes_and_optimizations.sql`)
+
+---
+
+# Active Flyway Migrations & Indexes
+
+### V1 — Initial Relational Schema (`V1__initial_schema.sql`)
+Defines 13 normalized tables:
+1. `roles`: Core RBAC roles (`ROLE_CANDIDATE`, `ROLE_RECRUITER`, `ROLE_ADMIN`).
+2. `users`: Supabase UUID mapping, first/last name, email, phone, role foreign key, status.
+3. `companies`: Employer identity, recruiter user foreign key, website, logo URL, industry.
+4. `candidate_profiles`: User 1-to-1 link, headline, bio, experience years, portfolio/GitHub/LinkedIn URLs.
+5. `educations`: Degree, institution, field of study, start/end dates, GPA/grade.
+6. `experiences`: Company, job title, start/end dates, is_current, description.
+7. `skills` & `candidate_skills`: Taxonomy of skills, candidate skill proficiency and primary tags.
+8. `certifications`: Name, issuing organization, issue/expiration dates, credential URLs.
+9. `resumes`: Storage URL, file size, mime type, parsed text, primary flag.
+10. `jobs`: Company, recruiter, title, description, job type, work mode, salary bounds, status.
+11. `job_applications`: Candidate profile, job, resume, status (`APPLIED`..`REJECTED`), cover letter, match score.
+12. `interviews`: Application reference, scheduled timestamp, duration, meeting link, status.
+13. `notifications`: User foreign key, title, message, type, is_read, target link URL.
+
+### V2 — Performance Indexes & Optimizations (`V2__indexes_and_optimizations.sql`)
+High-throughput query indexes:
+- `idx_users_supabase_id` ON `users(supabase_user_id)`
+- `idx_users_email_status` ON `users(email, status)`
+- `idx_candidate_profiles_user_id` ON `candidate_profiles(user_id)`
+- `idx_jobs_filter` ON `jobs(status, job_type, experience_level, work_mode)`
+- `idx_jobs_status_created` ON `jobs(status, created_at DESC)`
+- `idx_job_applications_job_status` ON `job_applications(job_id, status)`
+- `idx_job_applications_candidate_id` ON `job_applications(candidate_id)`
+- `idx_notifications_user_unread` ON `notifications(user_id, is_read)`
+- `idx_interviews_scheduled_at` ON `interviews(scheduled_at)`
 
 ---
 
