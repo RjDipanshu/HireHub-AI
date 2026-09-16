@@ -1,0 +1,49 @@
+{
+  "name": "hirehub-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node scripts/test-api-integration.js",
+    "test:api": "node scripts/test-api-integration.js",
+    "test:rbac": "node scripts/test-rbac-routing.js",
+    "test:candidate": "node scripts/test-candidate-profile.js",
+    "test:candidate-flow": "node scripts/test-candidate-flow.js",
+    "test:recruiter": "node scripts/test-recruiter-portal.js",
+    "test:admin": "node scripts/test-admin-portal.js",
+    "test:ai": "node scripts/test-ai-career-intelligence.js",
+    "test:resume-analyzer": "node scripts/test-ai-resume-analyzer.js",
+    "test:job-match": "node scripts/test-ai-job-match.js",
+    "test:storage": "node scripts/test-file-storage.js",
+    "test:notifications": "node scripts/test-notifications-communication.js",
+    "test:e2e": "node scripts/test-e2e-flows.js",
+    "test:docker-ci": "node scripts/test-docker-ci.js",
+    "test:security-audit": "node scripts/security-audit.js",
+    "test:semantic-search": "node scripts/test-semantic-search.js",
+    "test:ai-evaluation": "node scripts/evaluate-ai-quality.js",
+    "test:e2e-journeys": "node scripts/test-e2e-journeys.js",
+    "test:ui-ux-audit": "node scripts/test-ui-ux-audit.js",
+    "test:forgot-password": "node scripts/test-forgot-password.js",
+    "test:reset-password": "node scripts/test-reset-password.js",
+    "test:signup-verification": "node scripts/test-signup-verification.js",
+    "test:support-frontend": "node scripts/test-support-frontend.js",
+    "test:all": "npm run test:api && npm run test:rbac && npm run test:candidate && npm run test:candidate-flow && npm run test:recruiter && npm run test:admin && npm run test:ai && npm run test:resume-analyzer && npm run test:job-match && npm run test:storage && npm run test:notifications && npm run test:e2e && npm run test:docker-ci && npm run test:security-audit && npm run test:semantic-search && npm run test:ai-evaluation && npm run test:e2e-journeys && npm run test:ui-ux-audit && npm run test:forgot-password && npm run test:reset-password && npm run test:signup-verification && npm run test:support-frontend"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.115.0",
+    "axios": "^1.20.0",
+    "lucide-react": "^1.41.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.18.3"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.2.0"
+  }
+}

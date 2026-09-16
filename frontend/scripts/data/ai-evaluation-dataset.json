@@ -1,0 +1,222 @@
+[
+  {
+    "scenarioId": "SENIOR_FULLSTACK_JAVA_REACT",
+    "domain": "Full-Stack Development",
+    "job": {
+      "title": "Senior Full-Stack Engineer (Java & React)",
+      "requiredSkills": ["Java", "Spring Boot", "React", "PostgreSQL", "Docker", "REST APIs"],
+      "minYearsExperience": 5.0,
+      "description": "Lead full-stack engineering across Java Spring microservices and React TypeScript client applications."
+    },
+    "candidate": {
+      "name": "Sarah Chen",
+      "headline": "Senior Full-Stack Software Engineer (Java, Spring, React)",
+      "yearsOfExperience": 6.5,
+      "skills": ["Java", "Spring Boot", "React", "TypeScript", "PostgreSQL", "Docker", "Git", "REST APIs", "AWS"],
+      "bio": "6+ years architecting enterprise SaaS platforms using Spring Boot and modern React.",
+      "resumeText": "Senior Engineer with 6.5 years experience developing high-scale platforms with Java, Spring Boot, React, and PostgreSQL."
+    },
+    "expectedMatchTier": "EXCELLENT",
+    "expectedMinScore": 80,
+    "expectedMaxScore": 98,
+    "expectedMissingSkillsCount": 0
+  },
+  {
+    "scenarioId": "CLOUD_DEVOPS_K8S",
+    "domain": "DevOps & Infrastructure",
+    "job": {
+      "title": "Senior Cloud DevOps & Kubernetes Platform Engineer",
+      "requiredSkills": ["Kubernetes", "Docker", "AWS", "Terraform", "CI/CD", "Linux"],
+      "minYearsExperience": 4.0,
+      "description": "Design cloud native Kubernetes infrastructure and multi-region deployment automation."
+    },
+    "candidate": {
+      "name": "David Martinez",
+      "headline": "Lead DevOps Architect & Cloud Platform Specialist",
+      "yearsOfExperience": 7.0,
+      "skills": ["Kubernetes", "Docker", "AWS", "Terraform", "CI/CD", "Linux", "Python", "Prometheus"],
+      "bio": "Specialized in container orchestration, infrastructure-as-code, and resilient cloud architectures.",
+      "resumeText": "Experienced Cloud Platform Engineer managing EKS Kubernetes clusters and Terraform deployments."
+    },
+    "expectedMatchTier": "EXCELLENT",
+    "expectedMinScore": 80,
+    "expectedMaxScore": 98,
+    "expectedMissingSkillsCount": 0
+  },
+  {
+    "scenarioId": "FRONTEND_REACT_TS",
+    "domain": "Frontend Web Engineering",
+    "job": {
+      "title": "Staff Frontend UI/UX Architect (React & Tailwind)",
+      "requiredSkills": ["React", "TypeScript", "Tailwind CSS", "JavaScript", "HTML", "CSS"],
+      "minYearsExperience": 5.0,
+      "description": "Build high-performance web interfaces, design systems, and responsive accessibility."
+    },
+    "candidate": {
+      "name": "Elena Rostova",
+      "headline": "Staff Frontend Architect | Design Systems Lead",
+      "yearsOfExperience": 8.0,
+      "skills": ["React", "TypeScript", "Tailwind CSS", "JavaScript", "HTML", "CSS", "Next.js", "Redux"],
+      "bio": "Passionate frontend engineer obsessed with micro-interactions, responsive design, and web performance.",
+      "resumeText": "Architected accessible React design systems adopted by 150+ engineers. Expert in Tailwind and TypeScript."
+    },
+    "expectedMatchTier": "EXCELLENT",
+    "expectedMinScore": 85,
+    "expectedMaxScore": 98,
+    "expectedMissingSkillsCount": 0
+  },
+  {
+    "scenarioId": "PYTHON_BACKEND_VS_JAVA_JOB",
+    "domain": "Cross-Stack Backend",
+    "job": {
+      "title": "Enterprise Java Microservices Architect",
+      "requiredSkills": ["Java", "Spring Boot", "Kafka", "Hibernate", "PostgreSQL"],
+      "minYearsExperience": 6.0,
+      "description": "Architect high-throughput financial settlement engines using Java 21 and Spring Cloud."
+    },
+    "candidate": {
+      "name": "Priya Patel",
+      "headline": "Senior Backend Engineer (Python, Django, FastAPI)",
+      "yearsOfExperience": 5.5,
+      "skills": ["Python", "FastAPI", "Django", "PostgreSQL", "Docker", "Redis"],
+      "bio": "Backend specialist focused on high-throughput Python API services and asynchronous task queues.",
+      "resumeText": "Developed scalable microservices in Python with FastAPI and PostgreSQL. Familiar with distributed messaging."
+    },
+    "expectedMatchTier": "MODERATE",
+    "expectedMinScore": 35,
+    "expectedMaxScore": 65,
+    "expectedMissingSkillsCount": 3
+  },
+  {
+    "scenarioId": "JUNIOR_DEV_VS_STAFF_ARCHITECT",
+    "domain": "Experience Level Mismatch",
+    "job": {
+      "title": "Principal Staff Distributed Systems Architect",
+      "requiredSkills": ["Distributed Systems", "Java", "Kubernetes", "Kafka", "Architecture", "Cloud"],
+      "minYearsExperience": 10.0,
+      "description": "Drive 5-year technical vision for distributed fault-tolerant database infrastructure."
+    },
+    "candidate": {
+      "name": "Liam Connor",
+      "headline": "Junior Software Developer",
+      "yearsOfExperience": 1.0,
+      "skills": ["Java", "Git", "SQL"],
+      "bio": "Junior software developer eager to learn and contribute to backend services.",
+      "resumeText": "Recent CS graduate with 1 year junior engineering experience building basic CRUD APIs in Java."
+    },
+    "expectedMatchTier": "LOW",
+    "expectedMinScore": 20,
+    "expectedMaxScore": 45,
+    "expectedMissingSkillsCount": 3
+  },
+  {
+    "scenarioId": "DATA_ENGINEER_VS_MOBILE_JOB",
+    "domain": "Unrelated Domain Mismatch",
+    "job": {
+      "title": "Senior iOS & Swift Mobile Developer",
+      "requiredSkills": ["Swift", "iOS", "Xcode", "SwiftUI", "CoreData", "Mobile UI"],
+      "minYearsExperience": 4.0,
+      "description": "Build world-class native iOS consumer mobile applications."
+    },
+    "candidate": {
+      "name": "Marcus Vance",
+      "headline": "Big Data Pipeline Engineer",
+      "yearsOfExperience": 5.0,
+      "skills": ["Apache Spark", "Hadoop", "Python", "SQL", "Airflow", "Snowflake"],
+      "bio": "ETL and data warehouse engineer processing terabytes of batch and streaming event data.",
+      "resumeText": "Built data pipelines using Spark, Airflow, and Snowflake for analytics dashboards."
+    },
+    "expectedMatchTier": "LOW",
+    "expectedMinScore": 15,
+    "expectedMaxScore": 35,
+    "expectedMissingSkillsCount": 4
+  },
+  {
+    "scenarioId": "FLUTTER_MOBILE_ENGINEER",
+    "domain": "Cross-Platform Mobile",
+    "job": {
+      "title": "Lead Mobile Flutter & Cross-Platform Developer",
+      "requiredSkills": ["Flutter", "Dart", "Mobile", "REST APIs", "Git", "State Management"],
+      "minYearsExperience": 4.0,
+      "description": "Develop and ship high-retention Flutter iOS and Android applications."
+    },
+    "candidate": {
+      "name": "Carlos Gomez",
+      "headline": "Lead Cross-Platform Mobile Engineer (Flutter & Dart)",
+      "yearsOfExperience": 5.0,
+      "skills": ["Flutter", "Dart", "Mobile", "REST APIs", "Git", "Bloc", "Firebase"],
+      "bio": "Shipped 6 successful Flutter apps to both Apple App Store and Google Play Store.",
+      "resumeText": "Lead Mobile Developer with deep Dart and Flutter expertise, implementing Bloc state management."
+    },
+    "expectedMatchTier": "EXCELLENT",
+    "expectedMinScore": 80,
+    "expectedMaxScore": 98,
+    "expectedMissingSkillsCount": 0
+  },
+  {
+    "scenarioId": "DEVSECOPS_CYBERSECURITY",
+    "domain": "Security Engineering",
+    "job": {
+      "title": "Senior Cybersecurity & DevSecOps Specialist",
+      "requiredSkills": ["Security", "Docker", "Kubernetes", "Linux", "CI/CD", "Vulnerability Assessment"],
+      "minYearsExperience": 4.0,
+      "description": "Embed automated SAST/DAST security scanning and compliance across container pipelines."
+    },
+    "candidate": {
+      "name": "Amina Al-Mansoor",
+      "headline": "DevSecOps & Cloud Security Engineer",
+      "yearsOfExperience": 6.0,
+      "skills": ["Security", "Docker", "Kubernetes", "Linux", "CI/CD", "Python", "OWASP", "Vulnerability Assessment"],
+      "bio": "Cybersecurity professional dedicated to zero-trust cloud architectures and shift-left automated scanning.",
+      "resumeText": "Implemented container security hardening, secret scanning, and automated CI/CD vulnerability gates."
+    },
+    "expectedMatchTier": "EXCELLENT",
+    "expectedMinScore": 80,
+    "expectedMaxScore": 98,
+    "expectedMissingSkillsCount": 0
+  },
+  {
+    "scenarioId": "ENGINEERING_MANAGER",
+    "domain": "Technical Leadership",
+    "job": {
+      "title": "Software Engineering Manager — Cloud Infrastructure",
+      "requiredSkills": ["Engineering Management", "Agile", "Cloud", "Leadership", "Communication", "System Design"],
+      "minYearsExperience": 7.0,
+      "description": "Lead and scale an engineering organization of 12 distributed platform engineers."
+    },
+    "candidate": {
+      "name": "Robert Sterling",
+      "headline": "Engineering Manager | Former Principal Software Engineer",
+      "yearsOfExperience": 9.0,
+      "skills": ["Engineering Management", "Agile", "Cloud", "Leadership", "Communication", "System Design", "AWS"],
+      "bio": "Technical manager adept at mentoring high-performing teams, roadmapping, and system design.",
+      "resumeText": "Managed 14 platform engineers, improved delivery velocity by 40%, and managed cloud budgets."
+    },
+    "expectedMatchTier": "EXCELLENT",
+    "expectedMinScore": 80,
+    "expectedMaxScore": 98,
+    "expectedMissingSkillsCount": 0
+  },
+  {
+    "scenarioId": "QA_AUTOMATION_LEAD",
+    "domain": "Quality Assurance & Testing",
+    "job": {
+      "title": "Senior QA Automation Engineer (Playwright & Selenium)",
+      "requiredSkills": ["QA Automation", "Playwright", "Selenium", "JavaScript", "CI/CD", "API Testing"],
+      "minYearsExperience": 4.0,
+      "description": "Build automated end-to-end regression test suites for web platforms."
+    },
+    "candidate": {
+      "name": "Jessica Taylor",
+      "headline": "Lead SDET & QA Automation Engineer",
+      "yearsOfExperience": 5.5,
+      "skills": ["QA Automation", "Playwright", "Selenium", "JavaScript", "CI/CD", "API Testing", "Postman"],
+      "bio": "Quality-first engineer creating maintainable automated test frameworks and performance tests.",
+      "resumeText": "Developed comprehensive CI/CD test automation using Playwright, Selenium, and Cypress."
+    },
+    "expectedMatchTier": "EXCELLENT",
+    "expectedMinScore": 80,
+    "expectedMaxScore": 98,
+    "expectedMissingSkillsCount": 0
+  }
+]
