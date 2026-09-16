@@ -1,132 +1,37 @@
 package com.hirehub.hirehub_backend.service;
 
+import com.hirehub.hirehub_backend.dto.UserDTO;
 import com.hirehub.hirehub_backend.dto.UserRequestDTO;
 import com.hirehub.hirehub_backend.dto.UserResponseDTO;
-import com.hirehub.hirehub_backend.entity.Role;
-import com.hirehub.hirehub_backend.entity.User;
-import com.hirehub.hirehub_backend.enums.UserStatus;
-import com.hirehub.hirehub_backend.repository.RoleRepository;
-import com.hirehub.hirehub_backend.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.hirehub.hirehub_backend.dto.UserSyncDTO;
+import com.hirehub.hirehub_backend.enums.RoleType;
+
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-@Service
-@RequiredArgsConstructor
-@Transactional(readOnly = true)
-public class UserService {
+public interface UserService {
 
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
+    UserResponseDTO syncUser(UUID supabaseUserId, String email, Boolean emailVerified, UserSyncDTO syncDTO);
 
-    public List<UserResponseDTO> getAllUsers() {
-        return userRepository.findAllByIsDeletedFalse().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
+    UserResponseDTO getCurrentUser(UUID supabaseUserId);
 
-    public UserResponseDTO getUserById(UUID id) {
-        User user = userRepository.findByIdAndIsDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
-        return convertToDTO(user);
-    }
+    UserDTO getUserDetails(UUID id);
 
-    public UserResponseDTO getUserByEmail(String email) {
-        User user = userRepository.findByEmailAndIsDeletedFalse(email)
-                .orElseThrow(() -> new RuntimeException("User not found with Email: " + email));
-        return convertToDTO(user);
-    }
+    List<UserResponseDTO> getAllUsers();
 
-    public UserResponseDTO getUserBySupabaseUserId(UUID supabaseUserId) {
-        User user = userRepository.findBySupabaseUserIdAndIsDeletedFalse(supabaseUserId)
-                .orElseThrow(() -> new RuntimeException("User not found with Supabase User ID: " + supabaseUserId));
-        return convertToDTO(user);
-    }
+    UserResponseDTO getUserById(UUID id);
 
-    @Transactional
-    public UserResponseDTO createUser(UserRequestDTO requestDTO) {
-        if (userRepository.findByEmailAndIsDeletedFalse(requestDTO.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already in use: " + requestDTO.getEmail());
-        }
-        if (userRepository.findBySupabaseUserIdAndIsDeletedFalse(requestDTO.getSupabaseUserId()).isPresent()) {
-            throw new RuntimeException("Supabase User ID already registered: " + requestDTO.getSupabaseUserId());
-        }
+    UserResponseDTO getUserByEmail(String email);
 
-        Role role = roleRepository.findByName(requestDTO.getRole())
-                .orElseThrow(() -> new RuntimeException("Role not found: " + requestDTO.getRole()));
+    UserResponseDTO getUserBySupabaseUserId(UUID supabaseUserId);
 
-        User user = new User();
-        user.setSupabaseUserId(requestDTO.getSupabaseUserId());
-        user.setFirstName(requestDTO.getFirstName());
-        user.setLastName(requestDTO.getLastName());
-        user.setEmail(requestDTO.getEmail());
-        user.setPhone(requestDTO.getPhone());
-        user.setProfileImageUrl(requestDTO.getProfileImageUrl());
-        user.setRole(role);
-        user.setStatus(requestDTO.getStatus() != null ? requestDTO.getStatus() : UserStatus.ACTIVE);
-        user.setEmailVerified(requestDTO.getEmailVerified() != null ? requestDTO.getEmailVerified() : false);
-        user.setIsDeleted(false);
+    UserResponseDTO createUser(UserRequestDTO requestDTO);
 
-        User savedUser = userRepository.save(user);
-        return convertToDTO(savedUser);
-    }
+    UserResponseDTO updateUser(UUID id, UserRequestDTO requestDTO);
 
-    @Transactional
-    public UserResponseDTO updateUser(UUID id, UserRequestDTO requestDTO) {
-        User user = userRepository.findByIdAndIsDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
+    void deleteUser(UUID id);
 
-        if (!user.getEmail().equalsIgnoreCase(requestDTO.getEmail()) &&
-                userRepository.findByEmailAndIsDeletedFalse(requestDTO.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already in use: " + requestDTO.getEmail());
-        }
+    UserResponseDTO updateUserRole(UUID id, RoleType newRole);
 
-        Role role = roleRepository.findByName(requestDTO.getRole())
-                .orElseThrow(() -> new RuntimeException("Role not found: " + requestDTO.getRole()));
-
-        user.setFirstName(requestDTO.getFirstName());
-        user.setLastName(requestDTO.getLastName());
-        user.setEmail(requestDTO.getEmail());
-        user.setPhone(requestDTO.getPhone());
-        user.setProfileImageUrl(requestDTO.getProfileImageUrl());
-        user.setRole(role);
-        
-        if (requestDTO.getStatus() != null) {
-            user.setStatus(requestDTO.getStatus());
-        }
-        if (requestDTO.getEmailVerified() != null) {
-            user.setEmailVerified(requestDTO.getEmailVerified());
-        }
-
-        User updatedUser = userRepository.save(user);
-        return convertToDTO(updatedUser);
-    }
-
-    @Transactional
-    public void deleteUser(UUID id) {
-        User user = userRepository.findByIdAndIsDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
-        user.setIsDeleted(true);
-        userRepository.save(user);
-    }
-
-    private UserResponseDTO convertToDTO(User user) {
-        return new UserResponseDTO(
-                user.getId(),
-                user.getSupabaseUserId(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getEmail(),
-                user.getPhone(),
-                user.getProfileImageUrl(),
-                user.getRole().getName(),
-                user.getStatus(),
-                user.getEmailVerified(),
-                user.getCreatedAt(),
-                user.getUpdatedAt()
-        );
-    }
+    UserResponseDTO updateUserStatus(UUID id, com.hirehub.hirehub_backend.enums.UserStatus status);
 }
