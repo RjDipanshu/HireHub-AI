@@ -13,4 +13,5 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByEmailAndIsDeletedFalse(String email);
     Optional<User> findBySupabaseUserIdAndIsDeletedFalse(UUID supabaseUserId);
     List<User> findAllByIsDeletedFalse();
+    List<User> findByRoleNameAndIsDeletedFalse(com.hirehub.hirehub_backend.enums.RoleType roleName);
 }
