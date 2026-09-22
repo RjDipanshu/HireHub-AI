@@ -18,5 +18,7 @@ public interface JobSyncRunRepository extends JpaRepository<JobSyncRun, UUID> {
 
     Page<JobSyncRun> findAllByOrderByStartedAtDesc(Pageable pageable);
 
+    Optional<JobSyncRun> findTopByOrderByStartedAtDesc();
+
     Optional<JobSyncRun> findFirstBySourceTypeOrderByStartedAtDesc(SourceType sourceType);
 }

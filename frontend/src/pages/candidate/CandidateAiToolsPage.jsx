@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import aiService from '../../services/aiService';
 import candidateService from '../../services/candidateService';
 import AiScoreBadge from '../../components/ai/AiScoreBadge';
+import AtsScoreGauge from '../../components/ai/AtsScoreGauge';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import {
   Sparkles,
@@ -683,65 +684,14 @@ export const CandidateAiToolsPage = () => {
               </div>
             ) : resumeResult ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                {/* 1.0 ATS SCORE HERO CARD */}
-                <div
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.08))',
-                    border: '1px solid rgba(99, 102, 241, 0.25)',
-                    borderRadius: 'var(--radius-lg)',
-                    padding: '1.25rem',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                    gap: '0.75rem',
+                {/* 1.0 INTERACTIVE ATS SCORE INTELLIGENCE GAUGE */}
+                <AtsScoreGauge
+                  analysis={resumeResult}
+                  targetRole={targetRole}
+                  onApplySuggestion={(suggestion) => {
+                    // Optional callback hook for candidate workflow
                   }}
-                >
-                  <div style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                    Overall ATS Compatibility Score
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.25rem' }}>
-                    <span
-                      style={{
-                        fontSize: '3.5rem',
-                        fontWeight: 900,
-                        lineHeight: 1,
-                        background: 'linear-gradient(135deg, #6366f1, #a855f7)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                      }}
-                    >
-                      {resumeResult.overallScore || resumeResult.atsScore || 82}
-                    </span>
-                    <span style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-muted)' }}>/ 100</span>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    <span
-                      className="badge"
-                      style={{
-                        background: (resumeResult.overallScore || 82) >= 80 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                        color: (resumeResult.overallScore || 82) >= 80 ? '#10b981' : '#f59e0b',
-                        border: '1px solid',
-                        borderColor: (resumeResult.overallScore || 82) >= 80 ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)',
-                        fontWeight: 700,
-                      }}
-                    >
-                      Fit: {resumeResult.matchLevel || 'High'} Match
-                    </span>
-                    {resumeResult.jobTitle && (
-                      <span className="badge badge-secondary" style={{ fontSize: '0.8rem' }}>
-                        Target: {resumeResult.jobTitle}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Summary */}
-                  <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', margin: 0, maxWidth: '580px', lineHeight: 1.5 }}>
-                    {resumeResult.summary}
-                  </p>
-                </div>
+                />
 
                 {/* DETECTED SKILLS (Technical & Soft) */}
                 <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>

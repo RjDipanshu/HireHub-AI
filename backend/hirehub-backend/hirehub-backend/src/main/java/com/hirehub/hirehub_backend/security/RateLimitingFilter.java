@@ -49,6 +49,15 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
     private final Map<String, ClientBucket> clientBuckets = new ConcurrentHashMap<>();
 
+    /**
+     * Periodic cleanup job runs every 5 minutes to evict stale IP entries.
+     */
+    @org.springframework.scheduling.annotation.Scheduled(fixedRate = 300000)
+    public void cleanupExpiredBuckets() {
+        long now = Instant.now().getEpochSecond();
+        clientBuckets.entrySet().removeIf(entry -> (now - entry.getValue().windowStartEpoch) > WINDOW_SECONDS * 5);
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
