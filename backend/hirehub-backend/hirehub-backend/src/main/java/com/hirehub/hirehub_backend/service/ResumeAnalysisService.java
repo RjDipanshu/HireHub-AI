@@ -14,6 +14,7 @@ import com.hirehub.hirehub_backend.repository.ResumeAnalysisRepository;
 import com.hirehub.hirehub_backend.repository.ResumeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -34,12 +36,28 @@ public class ResumeAnalysisService {
     private final ResumeAnalysisRepository resumeAnalysisRepository;
     private final CandidateProfileRepository candidateProfileRepository;
     private final JobRepository jobRepository;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+
+    /**
+     * Asynchronous resume analysis runner executed on dedicated aiTaskExecutor pool.
+     */
+    @Async("aiTaskExecutor")
+    public CompletableFuture<ResumeAnalysisResponseDTO> analyzeResumeAsync(UUID supabaseUserId, ResumeAnalysisRequestDTO dto) {
+        try {
+            ResumeAnalysisResponseDTO result = analyzeAndPersistResume(supabaseUserId, dto);
+            return CompletableFuture.completedFuture(result);
+        } catch (Exception e) {
+            log.error("Async resume analysis error: {}", e.getMessage(), e);
+            CompletableFuture<ResumeAnalysisResponseDTO> future = new CompletableFuture<>();
+            future.completeExceptionally(e);
+            return future;
+        }
+    }
 
     /**
      * 1.0.2 & 1.0.6: Analyzes candidate resume text/ID/job and persists structured analysis in DB.
+     * Note: Transactional boundary is decoupled so external Gemini HTTP calls do NOT hold HikariCP pool connections.
      */
-    @Transactional
     public ResumeAnalysisResponseDTO analyzeAndPersistResume(UUID supabaseUserId, ResumeAnalysisRequestDTO dto) {
         CandidateProfile candidate = candidateProfileRepository.findByUserSupabaseUserIdAndIsDeletedFalse(supabaseUserId)
                 .orElseThrow(() -> new RuntimeException("Candidate profile not found"));
@@ -92,7 +110,7 @@ public class ResumeAnalysisService {
                     : "Software Engineer";
         }
 
-        // 4. Run Gemini Structured Analysis (or resilient heuristic engine)
+        // 4. Run Gemini Structured Analysis outside database transaction
         ResumeAnalysisResponseDTO responseDTO = geminiService.analyzeResumeStructured(resumeText, targetRole);
 
         if (job != null) {
@@ -103,14 +121,8 @@ public class ResumeAnalysisService {
             responseDTO.setResumeId(resume.getId());
         }
 
-        // 5. Persist to Database
+        // 5. Persist to Database in a quick isolated transaction
         persistAnalysisRecord(candidate, resume, responseDTO);
-
-        // 6. Update ATS score on Resume if linked
-        if (resume != null) {
-            resume.setAtsScore((double) responseDTO.getMatchScore());
-            resumeRepository.save(resume);
-        }
 
         return responseDTO;
     }
@@ -118,7 +130,6 @@ public class ResumeAnalysisService {
     /**
      * 1.0.3 & 1.0.6: Uploads a PDF resume, extracts text via Apache PDFBox, runs structured AI, and persists.
      */
-    @Transactional
     public ResumeAnalysisResponseDTO analyzeUploadedPdfAndPersist(
             UUID supabaseUserId,
             MultipartFile file,
@@ -174,9 +185,10 @@ public class ResumeAnalysisService {
     }
 
     /**
-     * Persists structured analysis entity into resume_analyses table.
+     * Persists structured analysis entity into resume_analyses table in a dedicated short transaction.
      */
-    private void persistAnalysisRecord(CandidateProfile candidate, Resume resume, ResumeAnalysisResponseDTO dto) {
+    @Transactional
+    public void persistAnalysisRecord(CandidateProfile candidate, Resume resume, ResumeAnalysisResponseDTO dto) {
         try {
             ResumeAnalysis entity = new ResumeAnalysis();
             entity.setCandidateProfile(candidate);
@@ -199,6 +211,11 @@ public class ResumeAnalysisService {
             entity.setModelUsed(dto.getModelUsed() != null ? dto.getModelUsed() : "gemini-1.5-flash");
 
             resumeAnalysisRepository.save(entity);
+
+            if (resume != null) {
+                resume.setAtsScore((double) (dto.getOverallScore() != null ? dto.getOverallScore() : dto.getMatchScore()));
+                resumeRepository.save(resume);
+            }
         } catch (Exception e) {
             log.error("Failed to persist ResumeAnalysis to database: {}", e.getMessage(), e);
         }

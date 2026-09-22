@@ -36,13 +36,19 @@ public class GeminiService {
     private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=";
 
     private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     public GeminiService() {
+        this(new ObjectMapper());
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public GeminiService(ObjectMapper objectMapper) {
         org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(6000);
         factory.setReadTimeout(15000);
         this.restTemplate = new RestTemplate(factory);
+        this.objectMapper = objectMapper != null ? objectMapper : new ObjectMapper();
     }
 
     public boolean isConfigured() {

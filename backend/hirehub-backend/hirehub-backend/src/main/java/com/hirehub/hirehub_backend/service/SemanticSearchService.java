@@ -30,7 +30,7 @@ public class SemanticSearchService {
     private final GeminiService geminiService;
     private final JobRepository jobRepository;
     private final CandidateProfileRepository candidateProfileRepository;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     /**
      * 12.0 Semantic Job Search: Natural language intent-based job discovery.
