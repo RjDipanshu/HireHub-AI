@@ -1,9 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Briefcase, IndianRupee, Bookmark, ArrowUpRight, Building2 } from 'lucide-react';
+import { MapPin, Briefcase, IndianRupee, Bookmark, ArrowUpRight, Building2, ExternalLink } from 'lucide-react';
 import { formatIndianSalary } from '../../utils/salaryFormatter';
+import JobSourceBadge from './JobSourceBadge';
+import applicationService from '../../services/applicationService';
+import { useAuth } from '../../context/AuthContext';
 
 export const JobCard = ({ job, onSave, isSaved = false }) => {
+  const { isAuthenticated } = useAuth();
+  const [redirecting, setRedirecting] = useState(false);
+
   if (!job) return null;
 
   const {
@@ -17,6 +23,24 @@ export const JobCard = ({ job, onSave, isSaved = false }) => {
     requiredSkills = [],
     description,
   } = job;
+
+  const handleExternalApply = async (e) => {
+    e.preventDefault();
+    const targetUrl = job.externalApplyUrl || job.externalUrl;
+    if (isAuthenticated && id) {
+      try {
+        setRedirecting(true);
+        await applicationService.applyExternalJob(id);
+      } catch (err) {
+        console.warn('External apply tracking notice:', err);
+      } finally {
+        setRedirecting(false);
+      }
+    }
+    if (targetUrl) {
+      window.open(targetUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
 
   const companyName = job.company?.name || job.companyName || 'TechCorp India';
   const location = job.location || 'Bengaluru, India';
@@ -68,17 +92,23 @@ export const JobCard = ({ job, onSave, isSaved = false }) => {
               <span style={{ fontSize: '0.9rem', color: '#4b5563', fontWeight: 600 }}>
                 {companyName}
               </span>
+              {job.sourceType && (
+                <JobSourceBadge sourceType={job.sourceType} size="xs" />
+              )}
               {job.matchScore !== undefined && job.matchScore > 0 && (
                 <span style={{
                   fontSize: '0.75rem',
-                  fontWeight: 600,
-                  padding: '0.15rem 0.5rem',
+                  fontWeight: 700,
+                  padding: '0.15rem 0.55rem',
                   borderRadius: 'var(--radius-full)',
                   backgroundColor: '#e8f3fc',
                   color: 'var(--color-primary)',
                   border: '1px solid #c8e1f9',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
                 }}>
-                  {job.matchScore}% match
+                  🤖 {job.matchScore}% AI Match
                 </span>
               )}
             </div>
@@ -214,19 +244,39 @@ export const JobCard = ({ job, onSave, isSaved = false }) => {
           )}
         </div>
 
-        <Link
-          to={`/jobs/${id}`}
-          className="btn btn-primary btn-sm"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.3rem',
-            fontWeight: 600,
-            padding: '0.4rem 0.9rem',
-          }}
-        >
-          View Role <ArrowUpRight size={14} />
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          {job.externalApplyUrl && job.sourceType && job.sourceType !== 'INTERNAL' ? (
+            <button
+              type="button"
+              onClick={handleExternalApply}
+              disabled={redirecting}
+              className="btn btn-primary btn-sm"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                fontWeight: 600,
+                padding: '0.4rem 0.9rem',
+              }}
+            >
+              {redirecting ? 'Redirecting...' : 'Apply on Site'} <ExternalLink size={13} />
+            </button>
+          ) : (
+            <Link
+              to={`/jobs/${id}`}
+              className="btn btn-primary btn-sm"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                fontWeight: 600,
+                padding: '0.4rem 0.9rem',
+              }}
+            >
+              View Role <ArrowUpRight size={14} />
+            </Link>
+          )}
+        </div>
       </div>
     </div>
   );

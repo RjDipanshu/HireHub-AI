@@ -248,12 +248,15 @@
   transition: transform var(--transition-normal);
 }
 
-.main-wrapper {
+.main-wrapper,
+.dashboard-main {
   margin-left: var(--sidebar-width);
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-width: 0;
+  width: calc(100% - var(--sidebar-width));
 }
 
 @media (max-width: 900px) {
@@ -263,8 +266,10 @@
   .sidebar.open {
     transform: translateX(0);
   }
-  .main-wrapper {
+  .main-wrapper,
+  .dashboard-main {
     margin-left: 0;
+    width: 100%;
   }
   .mobile-toggle {
     display: flex !important;
@@ -511,4 +516,324 @@
   min-height: 44px;
   min-width: 44px;
 }
+
+/* ==========================================================================
+   InMail Direct Messaging Suite (Enterprise Style)
+   ========================================================================== */
+.inmail-container {
+  display: flex;
+  height: calc(100vh - 145px);
+  min-height: 600px;
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+.inmail-sidebar {
+  width: 340px;
+  min-width: 300px;
+  border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+}
+
+.inmail-sidebar-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: #ffffff;
+}
+
+.inmail-search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.75rem;
+  margin-top: 0.75rem;
+  transition: border-color var(--transition-fast);
+}
+
+.inmail-search-box:focus-within {
+  border-color: var(--color-primary);
+  background: #ffffff;
+}
+
+.inmail-search-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.825rem;
+  color: var(--text-primary);
+  width: 100%;
+}
+
+.inmail-threads-list {
+  flex: 1;
+  overflow-y: auto;
+  divide-y: 1px solid var(--border-subtle);
+}
+
+.inmail-thread-item {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem 1.15rem;
+  border: none;
+  border-bottom: 1px solid #f1f5f9;
+  background: #ffffff;
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.inmail-thread-item:hover {
+  background: #f8fafc;
+}
+
+.inmail-thread-item.active {
+  background: #eef6ff;
+  border-left: 4px solid var(--color-primary);
+}
+
+.inmail-avatar {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  max-width: 44px;
+  flex-shrink: 0;
+}
+
+.inmail-avatar-img {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  max-width: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid #e2e8f0;
+  display: block;
+}
+
+.inmail-avatar-fallback {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #e0f2fe;
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inmail-status-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #10b981;
+  border: 2px solid #ffffff;
+}
+
+.inmail-chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #f8fafc;
+  min-width: 0;
+}
+
+.inmail-chat-header {
+  height: 68px;
+  padding: 0.75rem 1.5rem;
+  background: #ffffff;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.inmail-messages-stream {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.inmail-bubble-in {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px 16px 16px 4px;
+  padding: 1rem 1.25rem;
+  max-width: 75%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.inmail-bubble-out {
+  background: var(--color-primary);
+  color: #ffffff;
+  border-radius: 16px 16px 4px 16px;
+  padding: 1rem 1.25rem;
+  max-width: 75%;
+  align-self: flex-end;
+  box-shadow: 0 2px 8px rgba(10, 102, 194, 0.2);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.inmail-composer {
+  padding: 1rem 1.5rem;
+  background: #ffffff;
+  border-top: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .inmail-container {
+    flex-direction: column;
+    height: auto;
+  }
+  .inmail-sidebar {
+    width: 100%;
+    max-height: 280px;
+  }
+}
+
+/* ==========================================================================
+   Skill Assessments & Verified Badges (Enterprise Style)
+   ========================================================================== */
+.assessment-hero {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem 2rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (min-width: 800px) {
+  .assessment-hero {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.assessment-kpi-grid {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 1rem;
+}
+
+@media (min-width: 800px) {
+  .assessment-kpi-grid {
+    border-top: none;
+    border-left: 1px solid #e2e8f0;
+    padding-top: 0;
+    padding-left: 2rem;
+  }
+}
+
+.assessment-kpi-card {
+  text-align: center;
+  min-width: 85px;
+}
+
+.assessment-kpi-number {
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--color-primary);
+}
+
+.assessment-kpi-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 0.25rem;
+}
+
+.assessment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.25rem;
+}
+
+.assessment-card {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all var(--transition-normal);
+}
+
+.assessment-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-color: #cbd5e1;
+}
+
+.assessment-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: #eef6ff;
+  border: 1px solid #dbeafe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.assessment-option-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1.15rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.assessment-option-card:hover {
+  border-color: #93c5fd;
+  background: #f8fafc;
+}
+
+.assessment-option-card.selected {
+  border-color: var(--color-primary);
+  background: #eff6ff;
+}
+
 

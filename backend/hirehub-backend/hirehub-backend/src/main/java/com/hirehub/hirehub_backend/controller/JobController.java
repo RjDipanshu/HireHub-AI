@@ -7,6 +7,9 @@ import com.hirehub.hirehub_backend.enums.EmploymentType;
 import com.hirehub.hirehub_backend.enums.ExperienceLevel;
 import com.hirehub.hirehub_backend.enums.JobStatus;
 import com.hirehub.hirehub_backend.enums.WorkMode;
+import com.hirehub.hirehub_backend.dto.application.JobApplicationRequestDTO;
+import com.hirehub.hirehub_backend.dto.application.JobApplicationResponseDTO;
+import com.hirehub.hirehub_backend.service.JobApplicationService;
 import com.hirehub.hirehub_backend.service.JobService;
 import com.hirehub.hirehub_backend.service.SavedJobService;
 import jakarta.validation.Valid;
@@ -44,6 +47,7 @@ public class JobController {
 
     private final JobService jobService;
     private final SavedJobService savedJobService;
+    private final JobApplicationService jobApplicationService;
 
     @Operation(summary = "Create a job posting", description = "Allows recruiters to publish a new job opportunity")
     @PostMapping
@@ -52,6 +56,31 @@ public class JobController {
             @Valid @RequestBody JobRequestDTO dto) {
         UUID supabaseUserId = UUID.fromString(jwt.getSubject());
         return ResponseEntity.status(HttpStatus.CREATED).body(jobService.createJob(supabaseUserId, dto));
+    }
+
+    @Operation(summary = "Apply for a job (Section 11 Architecture)", description = "Candidate applies -> saved in database -> candidate & recruiter dashboards reflect it")
+    @PostMapping("/{jobId}/applications")
+    public ResponseEntity<JobApplicationResponseDTO> applyForJob(
+            @PathVariable UUID jobId,
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestBody(required = false) JobApplicationRequestDTO dto) {
+        UUID supabaseUserId = UUID.fromString(jwt.getSubject());
+        if (dto == null) {
+            dto = new JobApplicationRequestDTO();
+        }
+        dto.setJobId(jobId);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(jobApplicationService.applyForJob(supabaseUserId, dto));
+    }
+
+    @Operation(summary = "Track external ATS application (Section 12 Architecture)", description = "Records application tracking record with status REDIRECTED before sending candidate to ATS")
+    @PostMapping("/{jobId}/apply-external")
+    public ResponseEntity<JobApplicationResponseDTO> trackExternalApplication(
+            @PathVariable UUID jobId,
+            @AuthenticationPrincipal Jwt jwt) {
+        UUID supabaseUserId = UUID.fromString(jwt.getSubject());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(jobApplicationService.trackExternalApplication(supabaseUserId, jobId));
     }
 
     @Operation(summary = "Search and filter jobs", description = "Public multi-criteria job search with pagination, salary ranges, and work mode filters")

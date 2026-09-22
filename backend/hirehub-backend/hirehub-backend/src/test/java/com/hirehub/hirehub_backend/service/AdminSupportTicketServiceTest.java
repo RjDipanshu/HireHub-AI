@@ -13,7 +13,6 @@ import com.hirehub.hirehub_backend.enums.TicketStatus;
 import com.hirehub.hirehub_backend.repository.SupportTicketRepository;
 import com.hirehub.hirehub_backend.repository.SupportTicketMessageRepository;
 import com.hirehub.hirehub_backend.repository.UserRepository;
-import com.hirehub.hirehub_backend.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

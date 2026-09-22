@@ -23,7 +23,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 
 export const Sidebar = ({ role = 'CANDIDATE', isOpen, onClose }) => {
-  const { logout, profile } = useAuth();
+  const { logout, profile, user } = useAuth();
 
   const candidateLinks = [
     { to: '/candidate/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -160,7 +160,7 @@ export const Sidebar = ({ role = 'CANDIDATE', isOpen, onClose }) => {
         background: '#f9fafb',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', overflow: 'hidden', minWidth: 0 }}>
             <div style={{
               width: '32px',
               height: '32px',
@@ -173,12 +173,16 @@ export const Sidebar = ({ role = 'CANDIDATE', isOpen, onClose }) => {
               justifyContent: 'center',
               fontSize: '0.85rem',
               fontWeight: 700,
+              flexShrink: 0,
             }}>
-              {(profile?.fullName || 'U')[0]}
+              {(profile?.fullName || user?.email || 'U')[0].toUpperCase()}
             </div>
-            <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                {profile?.fullName || 'User'}
+            <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, maxWidth: '135px' }}>
+              <div
+                style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                title={profile?.fullName || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
+              >
+                {profile?.fullName || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                 {role.toLowerCase()}
@@ -188,7 +192,7 @@ export const Sidebar = ({ role = 'CANDIDATE', isOpen, onClose }) => {
           <button
             onClick={logout}
             title="Sign out"
-            style={{ color: 'var(--text-muted)', padding: '0.4rem' }}
+            style={{ color: 'var(--text-muted)', padding: '0.4rem', border: 'none', background: 'transparent', cursor: 'pointer', flexShrink: 0 }}
           >
             <LogOut size={16} />
           </button>

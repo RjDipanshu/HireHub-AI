@@ -38,58 +38,9 @@ export const AdminApplicationsPage = () => {
       const data = await applicationService.getRecruiterApplications();
       const list = Array.isArray(data) ? data : data?.content || [];
       setApplications(list);
-    } catch (err) {
-      console.warn('Using audit fallback applications:', err);
-      setApplications([
-        {
-          id: 'app-101',
-          candidateName: 'Michael Chen',
-          candidateEmail: 'mchen@example.com',
-          jobTitle: 'Senior Full Stack Cloud Engineer',
-          companyName: 'NovaTech Solutions',
-          status: 'UNDER_REVIEW',
-          atsScore: 92,
-          appliedAt: '2026-08-25T14:30:00Z',
-          coverLetter: 'I am excited to apply for this Senior Full Stack role. Over the last 5 years, I have built and maintained distributed microservices in Java and React.',
-          resumeUrl: 'https://example.com/resumes/mchen-senior-swe.pdf',
-        },
-        {
-          id: 'app-102',
-          candidateName: 'Elena Rostova',
-          candidateEmail: 'elena@novatech.io',
-          jobTitle: 'Staff Distributed Systems Architect',
-          companyName: 'Google Cloud Labs',
-          status: 'INTERVIEW_SCHEDULED',
-          atsScore: 96,
-          appliedAt: '2026-08-26T09:15:00Z',
-          coverLetter: 'Having led cloud infrastructure migration for large enterprise teams, my background matches the mission-critical needs of Google Cloud Labs.',
-          resumeUrl: 'https://example.com/resumes/elena-rostova-cv.pdf',
-        },
-        {
-          id: 'app-103',
-          candidateName: 'Marcus Brody',
-          candidateEmail: 'mbrody@devpool.org',
-          jobTitle: 'Junior React Frontend Developer',
-          companyName: 'Nexus AI Systems',
-          status: 'APPLIED',
-          atsScore: 78,
-          appliedAt: '2026-08-27T11:45:00Z',
-          coverLetter: 'I recently finished my modern React certification and have shipped 3 production SPAs. Looking forward to joining Nexus AI.',
-          resumeUrl: 'https://example.com/resumes/marcus-brody.pdf',
-        },
-        {
-          id: 'app-104',
-          candidateName: 'Priya Patel',
-          candidateEmail: 'priya.patel@techdev.org',
-          jobTitle: 'Senior Full Stack Cloud Engineer',
-          companyName: 'NovaTech Solutions',
-          status: 'ACCEPTED',
-          atsScore: 94,
-          appliedAt: '2026-08-22T16:00:00Z',
-          coverLetter: 'With a deep focus on Spring Boot high-concurrency systems and AWS architecture, I am thrilled to join NovaTech.',
-          resumeUrl: 'https://example.com/resumes/priya-patel.pdf',
-        },
-      ]);
+      } catch (err) {
+      console.warn('Failed to load applications:', err);
+      setApplications([]);
     } finally {
       setLoading(false);
     }

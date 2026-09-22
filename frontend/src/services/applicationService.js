@@ -18,6 +18,16 @@ export const applicationService = {
     },
 
     /**
+     * Track external ATS job application redirection (Section 12 Architecture)
+     * Endpoint: POST /api/v1/jobs/{jobId}/apply-external
+     * @param {string} jobId - Job UUID
+     */
+    async applyExternalJob(jobId) {
+        const response = await api.post(`/jobs/${jobId}/apply-external`);
+        return response.data;
+    },
+
+    /**
      * Get all applications submitted by the current candidate
      * Endpoint: GET /api/v1/applications/me
      */

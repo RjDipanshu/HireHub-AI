@@ -1,6 +1,5 @@
 package com.hirehub.hirehub_backend.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hirehub.hirehub_backend.dto.UserRequestDTO;
 import com.hirehub.hirehub_backend.dto.ai.JobMatchResponseDTO;
 import com.hirehub.hirehub_backend.dto.candidate.CandidateProfileRequestDTO;

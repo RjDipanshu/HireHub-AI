@@ -43,6 +43,9 @@ public class JobApplicationResponseDTO {
 
     // Application details
     private ApplicationStatus status;
+    private com.hirehub.hirehub_backend.enums.ApplicationSource applicationSource;
+    private String externalJobId;
+    private String applicationUrl;
     private String coverLetter;
     private String feedback;
     private String rejectionReason;
@@ -50,5 +53,6 @@ public class JobApplicationResponseDTO {
     private LocalDateTime viewedByRecruiterAt;
 
     private LocalDateTime appliedAt;
+    private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

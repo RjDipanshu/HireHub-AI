@@ -26,5 +26,7 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
 
     boolean existsByJobIdAndCandidateIdAndIsDeletedFalse(UUID jobId, UUID candidateId);
 
+    Optional<JobApplication> findByJobIdAndCandidateIdAndIsDeletedFalse(UUID jobId, UUID candidateId);
+
     int countByJobIdAndIsDeletedFalse(UUID jobId);
 }

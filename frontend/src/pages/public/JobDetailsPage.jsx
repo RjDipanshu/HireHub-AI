@@ -9,7 +9,7 @@ import ApplyJobModal from '../../components/jobs/ApplyJobModal';
 import AiJobMatchModal from '../../components/ai/AiJobMatchModal';
 import aiService from '../../services/aiService';
 import { formatIndianSalary } from '../../utils/salaryFormatter';
-import INDIAN_TECH_JOBS from '../../data/mockJobs';
+
 import {
   MapPin,
   Briefcase,
@@ -91,13 +91,7 @@ export const JobDetailsPage = () => {
     const fetchJobData = async () => {
       setLoading(true);
 
-      // Check if job exists in our curated INDIAN_TECH_JOBS dataset
-      const foundMock = INDIAN_TECH_JOBS.find((j) => String(j.id) === String(id));
-      if (foundMock) {
-        setJob(foundMock);
-        setLoading(false);
-        return;
-      }
+
 
       try {
         const data = await jobService.getJobById(id);
@@ -112,41 +106,8 @@ export const JobDetailsPage = () => {
           });
         }
       } catch (err) {
-        console.warn('Could not load specific job ID from API, using demo data:', err);
-        setJob({
-          id,
-          title: 'Senior Full Stack Software Engineer',
-          companyName: 'Flipkart',
-          location: 'Bengaluru, Karnataka',
-          workMode: 'HYBRID',
-          employmentType: 'FULL_TIME',
-          experienceLevel: 'SENIOR_LEVEL',
-          minSalary: 2600000,
-          maxSalary: 3800000,
-          currency: 'INR',
-          description:
-            'We are seeking an exceptional Senior Full-Stack Engineer to scale our core high-throughput commerce services and next-generation interactive web experiences.',
-          responsibilities: [
-            'Architect, build, and deploy resilient microservices with Java 17 and Spring Boot',
-            'Develop responsive, high-performance web components with modern React and TypeScript',
-            'Scale PostgreSQL and distributed caching clusters handling high concurrent traffic',
-            'Collaborate across product engineering teams to ensure low-latency payment and order checkout',
-          ],
-          qualifications: [
-            '4+ years of experience delivering high-scale production systems',
-            'Deep proficiency with Java, Spring Boot, and REST architectural patterns',
-            'Solid experience with React, state management, and modern CSS systems',
-            'Hands-on experience with Kafka, Redis, and containerized Docker environments',
-          ],
-          benefits: [
-            'Hybrid work model (2 days office, 3 days remote)',
-            'Comprehensive health insurance for employee & family',
-            'Annual learning and tech certifications budget',
-            'Wellness allowance and performance bonuses',
-          ],
-          requiredSkills: ['Java', 'Spring Boot', 'React', 'PostgreSQL', 'Docker', 'REST APIs', 'Kafka'],
-          createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-        });
+        console.warn('Could not load specific job ID from API:', err);
+        setJob(null);
       } finally {
         setLoading(false);
       }

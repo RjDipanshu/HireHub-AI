@@ -7,11 +7,9 @@ import com.hirehub.hirehub_backend.dto.ai.SemanticJobMatchDTO;
 import com.hirehub.hirehub_backend.dto.ai.SemanticSearchRequestDTO;
 import com.hirehub.hirehub_backend.entity.CandidateProfile;
 import com.hirehub.hirehub_backend.entity.Job;
-import com.hirehub.hirehub_backend.entity.Resume;
 import com.hirehub.hirehub_backend.enums.JobStatus;
 import com.hirehub.hirehub_backend.repository.CandidateProfileRepository;
 import com.hirehub.hirehub_backend.repository.JobRepository;
-import com.hirehub.hirehub_backend.repository.ResumeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,8 +19,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -34,7 +30,6 @@ public class SemanticSearchService {
     private final GeminiService geminiService;
     private final JobRepository jobRepository;
     private final CandidateProfileRepository candidateProfileRepository;
-    private final ResumeRepository resumeRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**

@@ -13,7 +13,6 @@ import com.hirehub.hirehub_backend.entity.CandidateProfile;
 import com.hirehub.hirehub_backend.entity.CandidateSkill;
 import com.hirehub.hirehub_backend.entity.Job;
 import com.hirehub.hirehub_backend.entity.JobApplication;
-import com.hirehub.hirehub_backend.entity.JobSkill;
 import com.hirehub.hirehub_backend.entity.RecruiterProfile;
 import com.hirehub.hirehub_backend.repository.CandidateProfileRepository;
 import com.hirehub.hirehub_backend.repository.JobApplicationRepository;
@@ -224,6 +223,7 @@ public class AiService {
     public JobDescriptionResponseDTO generateJobDescription(JobDescriptionGenerateDTO dto) {
         String title = dto.getTitle().trim();
         String tone = dto.getTone() != null ? dto.getTone() : "Professional";
+        log.debug("Generating job description for '{}' with tone '{}'", title, tone);
         List<String> skills = dto.getKeySkills() != null ? dto.getKeySkills() : Arrays.asList("Java", "Spring Boot", "PostgreSQL", "Docker", "Git");
 
         String summary = String.format("We are looking for a skilled %s to design, develop, and deploy resilient, high-performance applications.", title);

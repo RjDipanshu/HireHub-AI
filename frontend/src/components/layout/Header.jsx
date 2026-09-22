@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Menu, Bell, Sparkles, User, Building2, Shield, ChevronDown, Check } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Menu, Bell, Sparkles, User, Building2, Shield, ChevronDown, Check, Briefcase, TrendingUp, LifeBuoy, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import notificationService from '../../services/notificationService';
 
 export const Header = ({ onMenuClick, title = 'Dashboard' }) => {
-  const { profile, role, switchRole } = useAuth();
+  const { user, profile, role, switchRole, logout } = useAuth();
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
   const [showRoleMenu, setShowRoleMenu] = useState(false);
@@ -42,6 +42,8 @@ export const Header = ({ onMenuClick, title = 'Dashboard' }) => {
     }
   };
 
+  const displayName = profile?.fullName || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+
   return (
     <header className="topbar">
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -52,12 +54,64 @@ export const Header = ({ onMenuClick, title = 'Dashboard' }) => {
         >
           <Menu size={22} />
         </button>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
           {title}
         </h2>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+        {/* Desktop Quick Nav Links */}
+        <nav className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+          <Link
+            to="/jobs"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              color: 'var(--text-secondary)',
+              textDecoration: 'none',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              transition: 'color var(--transition-fast)',
+            }}
+          >
+            <Briefcase size={16} />
+            <span>Explore Jobs</span>
+          </Link>
+          <Link
+            to="/salaries"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              color: 'var(--text-secondary)',
+              textDecoration: 'none',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              transition: 'color var(--transition-fast)',
+            }}
+          >
+            <TrendingUp size={16} />
+            <span>Salaries</span>
+          </Link>
+          <Link
+            to="/support"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              color: 'var(--text-secondary)',
+              textDecoration: 'none',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              transition: 'color var(--transition-fast)',
+            }}
+          >
+            <LifeBuoy size={16} />
+            <span>Support</span>
+          </Link>
+        </nav>
+
         {/* Instant Profile Switcher Dropdown */}
         <div ref={menuRef} style={{ position: 'relative' }}>
           <button
@@ -150,6 +204,7 @@ export const Header = ({ onMenuClick, title = 'Dashboard' }) => {
         {/* Notification Bell */}
         <div style={{ position: 'relative' }}>
           <button
+            onClick={() => navigate(role === 'RECRUITER' ? '/recruiter/notifications' : role === 'ADMIN' ? '/admin/notifications' : '/candidate/notifications')}
             style={{
               width: '38px',
               height: '38px',
@@ -189,7 +244,7 @@ export const Header = ({ onMenuClick, title = 'Dashboard' }) => {
           )}
         </div>
 
-        {/* User avatar indicator */}
+        {/* User Profile & Sign Out */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
           <div style={{
             width: '36px',
@@ -204,8 +259,35 @@ export const Header = ({ onMenuClick, title = 'Dashboard' }) => {
             fontSize: '0.9rem',
             color: 'var(--color-primary)',
           }}>
-            {(profile?.fullName || 'U')[0]}
+            {(displayName || 'U')[0].toUpperCase()}
           </div>
+          <span
+            className="desktop-nav"
+            style={{
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              color: 'var(--text-primary)',
+              maxWidth: '140px',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+            title={displayName}
+          >
+            {displayName}
+          </span>
+          <button
+            onClick={async () => {
+              await logout();
+              navigate('/');
+            }}
+            className="btn btn-secondary btn-sm"
+            title="Sign out"
+            aria-label="Sign out"
+            style={{ padding: '0.35rem 0.55rem', color: 'var(--text-secondary)' }}
+          >
+            <LogOut size={15} />
+          </button>
         </div>
       </div>
     </header>

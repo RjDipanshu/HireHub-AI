@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import jobService from '../../services/jobService';
+import marketplaceService from '../../services/marketplaceService';
 import candidateService from '../../services/candidateService';
 import JobCard from '../../components/jobs/JobCard';
 import JobFilter from '../../components/jobs/JobFilter';
@@ -7,7 +8,7 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { Briefcase, ArrowUpDown, Sparkles, AlertCircle, IndianRupee } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import aiService from '../../services/aiService';
-import INDIAN_TECH_JOBS from '../../data/mockJobs';
+
 
 export const JobsPage = () => {
   const { isAuthenticated, role } = useAuth();
@@ -23,6 +24,7 @@ export const JobsPage = () => {
     workMode: '',
     employmentType: '',
     experienceLevel: '',
+    sourceType: '',
     minSalary: '',
     skills: [],
     page: 0,
@@ -87,16 +89,39 @@ export const JobsPage = () => {
         }
       }
 
-      const data = await jobService.searchJobs({
-        keyword: filters.keyword || undefined,
-        location: filters.location || undefined,
-        workMode: filters.workMode || undefined,
-        employmentType: filters.employmentType || undefined,
-        experienceLevel: filters.experienceLevel || undefined,
-        minSalary: filters.minSalary || undefined,
-      });
+      let apiItems = [];
+      try {
+        const marketData = await marketplaceService.searchJobs({
+          keyword: filters.keyword || undefined,
+          location: filters.location || undefined,
+          workMode: filters.workMode || undefined,
+          employmentType: filters.employmentType || undefined,
+          experienceLevel: filters.experienceLevel || undefined,
+          sourceType: filters.sourceType || undefined,
+          page: filters.page || 0,
+          size: filters.size || 20,
+        });
+        apiItems = marketData.content || (Array.isArray(marketData) ? marketData : []);
+      } catch (marketErr) {
+        console.debug('[JobsPage] Marketplace service fallback:', marketErr);
+      }
 
-      const apiItems = data.content || (Array.isArray(data) ? data : []);
+      // Fallback to standard jobs endpoint if marketplace returned empty and no specific source was selected
+      if (apiItems.length === 0 && !filters.sourceType) {
+        try {
+          const standardData = await jobService.searchJobs({
+            keyword: filters.keyword || undefined,
+            location: filters.location || undefined,
+            workMode: filters.workMode || undefined,
+            employmentType: filters.employmentType || undefined,
+            experienceLevel: filters.experienceLevel || undefined,
+            minSalary: filters.minSalary || undefined,
+          });
+          apiItems = standardData.content || (Array.isArray(standardData) ? standardData : []);
+        } catch (stdErr) {
+          console.debug('[JobsPage] Standard jobs service error:', stdErr);
+        }
+      }
 
       // Filter out empty duplicate test jobs from backend if present, and sanitize
       const sanitizedApiItems = apiItems
@@ -108,23 +133,21 @@ export const JobsPage = () => {
           minSalary: j.minSalary || 1800000,
           maxSalary: j.maxSalary || 2800000,
           currency: j.currency || 'INR',
+          sourceType: j.sourceType || 'INTERNAL',
+          externalApplyUrl: j.externalApplyUrl,
+          requiredSkills: j.requiredSkills || j.skills || [],
         }));
 
-      // Merge genuine unique API jobs with our curated India & overseas tech jobs
-      const existingTitles = new Set(sanitizedApiItems.map((j) => j.title.toLowerCase()));
-      const filteredMocks = INDIAN_TECH_JOBS.filter((mj) => !existingTitles.has(mj.title.toLowerCase()));
-
-      const combined = [...sanitizedApiItems.slice(0, 5), ...filteredMocks];
-      setJobs(combined.length > 0 ? combined : INDIAN_TECH_JOBS);
+      setJobs(sanitizedApiItems);
     } catch (err) {
-      console.warn('API unavailable, loading curated Indian and overseas tech roles:', err);
-      setJobs(INDIAN_TECH_JOBS);
+      console.warn('API unavailable:', err);
+      setJobs([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Debounced search when keyword or location changes
+  // Debounced search when keyword, location, or source filter changes
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchJobs();
@@ -136,6 +159,7 @@ export const JobsPage = () => {
     filters.workMode,
     filters.employmentType,
     filters.experienceLevel,
+    filters.sourceType,
     filters.minSalary,
   ]);
 

@@ -47,6 +47,9 @@ public class ResumeParserService {
             if (phone != null && !phone.isBlank()) {
                 req.setPhone(phone);
             }
+            if (email != null && !email.isBlank() && user.getEmail() == null) {
+                log.debug("[ResumeParser] Extracted email from resume: {}", email);
+            }
         }
 
         // 2. Extract Headline & Location

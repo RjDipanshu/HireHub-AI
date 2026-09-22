@@ -6,7 +6,6 @@ import com.hirehub.hirehub_backend.dto.support.CreateSupportTicketRequest;
 import com.hirehub.hirehub_backend.enums.RoleType;
 import com.hirehub.hirehub_backend.enums.TicketCategory;
 import com.hirehub.hirehub_backend.enums.TicketPriority;
-import com.hirehub.hirehub_backend.enums.TicketStatus;
 import com.hirehub.hirehub_backend.enums.UserStatus;
 import com.hirehub.hirehub_backend.service.SupportTicketService;
 import com.hirehub.hirehub_backend.service.UserService;

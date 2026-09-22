@@ -1,18 +1,35 @@
 import React, { useState, useEffect } from 'react';
+import { 
+  Award, 
+  CheckCircle2, 
+  Clock, 
+  HelpCircle, 
+  Target, 
+  Sparkles, 
+  ArrowRight, 
+  ChevronRight, 
+  X, 
+  RotateCcw,
+  Check,
+  ShieldCheck,
+  Zap,
+  BookOpen
+} from 'lucide-react';
 import assessmentService from '../../services/assessmentService';
 
 export default function CandidateAssessmentsPage() {
     const [assessments, setAssessments] = useState([]);
     const [badges, setBadges] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedCategory, setSelectedCategory] = useState('ALL');
 
-    // Active quiz state
-    const [activeQuiz, setActiveQuiz] = useState(null); // full quiz object with questions
+    // Active quiz runner state
+    const [activeQuiz, setActiveQuiz] = useState(null);
     const [currentQIndex, setCurrentQIndex] = useState(0);
-    const [answers, setAnswers] = useState({}); // { [qId]: optionIndex }
-    const [timeLeftSeconds, setTimeLeftSeconds] = useState(300); // 5 mins
+    const [answers, setAnswers] = useState({});
+    const [timeLeftSeconds, setTimeLeftSeconds] = useState(300);
     const [submitting, setSubmitting] = useState(false);
-    const [quizResult, setQuizResult] = useState(null); // AssessmentResultDTO
+    const [quizResult, setQuizResult] = useState(null);
 
     useEffect(() => {
         loadAssessmentsAndBadges();
@@ -43,8 +60,8 @@ export default function CandidateAssessmentsPage() {
                 assessmentService.getAllAssessments(),
                 assessmentService.getMyBadges()
             ]);
-            setAssessments(catalog);
-            setBadges(myBadges);
+            setAssessments(catalog || []);
+            setBadges(myBadges || []);
         } catch (err) {
             console.error('Error loading assessments:', err);
         } finally {
@@ -83,7 +100,6 @@ export default function CandidateAssessmentsPage() {
             const result = await assessmentService.submitAssessment(activeQuiz.topicId, answers);
             setQuizResult(result);
             if (result.passed) {
-                // Refresh catalog & badges
                 loadAssessmentsAndBadges();
             }
         } catch (err) {
@@ -106,349 +122,372 @@ export default function CandidateAssessmentsPage() {
                 (b) =>
                     b.isPassed &&
                     (b.skillName?.toLowerCase().includes(topic.title?.toLowerCase()) ||
-                        b.badgeTitle?.toLowerCase().includes(topic.title?.toLowerCase()))
+                        b.badgeTitle?.toLowerCase().includes(topic.title?.toLowerCase()) ||
+                        b.skillName?.toLowerCase().includes(topic.topicId?.toLowerCase()))
             )
         );
     };
 
+    const categories = ['ALL', 'Backend Engineering', 'Frontend Engineering', 'Database & Infrastructure', 'Architecture & Scalability', 'DevOps & Automation'];
+
+    const filteredAssessments = assessments.filter((item) => {
+        if (selectedCategory === 'ALL') return true;
+        return item.category?.toLowerCase() === selectedCategory.toLowerCase();
+    });
+
+    const passedCount = badges.filter((b) => b.isPassed).length;
+
     return (
-        <div className="max-w-6xl mx-auto px-4 py-8 space-y-8 animate-fadeIn">
-            {/* Page Header */}
-            <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+            {/* 1. Hero Header Banner with KPIs */}
+            <div className="assessment-hero">
                 <div>
-                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-blue-700 mb-1">
-                        <span className="w-2 h-2 rounded-full bg-blue-600"></span>
-                        Skill Verification Engine
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', padding: '0.25rem 0.65rem', borderRadius: '9999px', background: '#eff6ff', color: 'var(--color-primary)', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.75rem' }}>
+                        <ShieldCheck size={14} />
+                        <span>HIREHUB AI VERIFIED CREDENTIALS</span>
                     </div>
-                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                    <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 0.5rem 0', letterSpacing: '-0.02em' }}>
                         Skill Assessments & Verified Badges
                     </h1>
-                    <p className="text-sm text-slate-600 mt-1 max-w-2xl">
-                        Validate your technical expertise through standardized timed assessments. Earn verified badges
-                        displayed on your profile and search cards to stand out to leading recruiters.
+                    <p style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-secondary)', maxWidth: '650px', lineHeight: 1.5 }}>
+                        Prove your technical expertise with standardized timed skill assessments. Earn verifiable digital badges recognized by hiring teams and highlighted in recruiter searches.
                     </p>
                 </div>
-                <div className="flex items-center gap-4 border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0 md:pl-6">
-                    <div className="text-center px-3">
-                        <div className="text-2xl font-bold text-blue-700">{assessments.length}</div>
-                        <div className="text-xs text-slate-500 font-medium">Available</div>
+
+                <div className="assessment-kpi-grid">
+                    <div className="assessment-kpi-card">
+                        <div className="assessment-kpi-number">{assessments.length || 5}</div>
+                        <div className="assessment-kpi-label">Available</div>
                     </div>
-                    <div className="text-center px-3 border-l border-slate-200">
-                        <div className="text-2xl font-bold text-emerald-600">
-                            {badges.filter((b) => b.isPassed).length}
-                        </div>
-                        <div className="text-xs text-slate-500 font-medium">Earned Badges</div>
+                    <div className="assessment-kpi-card">
+                        <div className="assessment-kpi-number" style={{ color: '#057642' }}>{passedCount}</div>
+                        <div className="assessment-kpi-label">Badges Earned</div>
                     </div>
-                    <div className="text-center px-3 border-l border-slate-200">
-                        <div className="text-2xl font-bold text-slate-700">70%</div>
-                        <div className="text-xs text-slate-500 font-medium">Pass Threshold</div>
+                    <div className="assessment-kpi-card">
+                        <div className="assessment-kpi-number" style={{ color: 'var(--text-primary)' }}>70%</div>
+                        <div className="assessment-kpi-label">Pass Threshold</div>
                     </div>
                 </div>
             </div>
 
-            {/* Badges Earned Ribbon (if any) */}
-            {badges.filter((b) => b.isPassed).length > 0 && (
-                <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-white border border-blue-200 rounded-xl p-5">
-                    <h2 className="text-sm font-bold text-blue-900 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <span>🏅</span> Your Verified Skill Credentials
-                    </h2>
-                    <div className="flex flex-wrap gap-3">
-                        {badges
-                            .filter((b) => b.isPassed)
-                            .map((b, idx) => (
-                                <div
-                                    key={b.id || idx}
-                                    className="flex items-center gap-2 bg-white border border-blue-200 px-3.5 py-2 rounded-lg shadow-sm"
-                                >
-                                    <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold">
-                                        ✓
+            {/* 2. Earned Credentials Showcase Ribbon */}
+            {passedCount > 0 && (
+                <div style={{ background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)', border: '1px solid #bbf7d0', borderRadius: 'var(--radius-lg)', padding: '1.25rem 1.5rem', boxShadow: 'var(--shadow-sm)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: 700, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            <Award size={18} color="#057642" />
+                            <span>Your Verified Credentials Showcase</span>
+                        </div>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#15803d' }}>
+                            {passedCount} active badge{passedCount > 1 ? 's' : ''} on your public profile
+                        </span>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                        {badges.filter((b) => b.isPassed).map((b, idx) => (
+                            <div key={b.id || idx} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', background: '#ffffff', border: '1px solid #86efac', padding: '0.5rem 0.85rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#dcfce7', color: '#15803d', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
+                                    ✓
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                        {b.badgeTitle || b.skillName}
                                     </div>
-                                    <div>
-                                        <div className="text-xs font-bold text-slate-900">{b.badgeTitle || b.skillName}</div>
-                                        <div className="text-[11px] text-slate-500">
-                                            Score: {b.score}% • Verified by HireHub AI
-                                        </div>
+                                    <div style={{ fontSize: '0.7rem', color: '#16a34a', fontWeight: 600 }}>
+                                        Verified Score: {b.score}% • Active Credential
                                     </div>
                                 </div>
-                            ))}
+                            </div>
+                        ))}
                     </div>
                 </div>
             )}
 
-            {/* Assessment Cards Grid */}
-            <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-bold text-slate-900">Standardized Technical Quizzes</h2>
-                    <span className="text-xs text-slate-500">5 Multiple Choice Questions • 5-Minute Time Limit</span>
-                </div>
-
-                {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {[1, 2, 3, 4].map((n) => (
-                            <div key={n} className="h-44 bg-slate-100 rounded-xl animate-pulse" />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {assessments.map((topic) => {
-                            const passed = isTopicPassed(topic);
-                            return (
-                                <div
-                                    key={topic.topicId}
-                                    className="bg-white border border-slate-200 rounded-xl p-5 hover:border-slate-300 hover:shadow-md transition-all flex flex-col justify-between"
-                                >
-                                    <div>
-                                        <div className="flex items-start justify-between gap-3 mb-3">
-                                            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-2xl border border-slate-200">
-                                                {topic.icon || '📝'}
-                                            </div>
-                                            {passed ? (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                    ✓ Verified
-                                                </span>
-                                            ) : (
-                                                <span className="text-xs font-medium text-slate-500 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded">
-                                                    {topic.category}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        <h3 className="text-base font-bold text-slate-900">{topic.title}</h3>
-                                        <p className="text-xs text-slate-600 mt-2 line-clamp-3 leading-relaxed">
-                                            {topic.description}
-                                        </p>
-                                    </div>
-
-                                    <div className="pt-5 border-t border-slate-100 mt-4">
-                                        <div className="flex items-center justify-between text-xs text-slate-500 mb-3">
-                                            <span>⏱️ {topic.durationMinutes || 5} Mins</span>
-                                            <span>❓ {topic.totalQuestions || 5} Questions</span>
-                                            <span>🎯 Pass: 70%</span>
-                                        </div>
-
-                                        <button
-                                            onClick={() => handleStartQuiz(topic.topicId)}
-                                            className={`w-full py-2.5 px-4 text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-2 ${
-                                                passed
-                                                    ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                                                    : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
-                                            }`}
-                                        >
-                                            {passed ? 'Retake Quiz' : 'Take Skill Quiz'}
-                                        </button>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
+            {/* 3. Category Filter Tabs */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                {categories.map((cat) => (
+                    <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setSelectedCategory(cat)}
+                        style={{
+                            padding: '0.45rem 0.85rem',
+                            fontSize: '0.8rem',
+                            fontWeight: selectedCategory === cat ? 700 : 500,
+                            borderRadius: '9999px',
+                            border: selectedCategory === cat ? '1px solid var(--color-primary)' : '1px solid var(--border-subtle)',
+                            background: selectedCategory === cat ? '#e8f3fc' : '#ffffff',
+                            color: selectedCategory === cat ? 'var(--color-primary)' : 'var(--text-secondary)',
+                            cursor: 'pointer',
+                            transition: 'all var(--transition-fast)',
+                        }}
+                    >
+                        {cat === 'ALL' ? 'All Assessments' : cat}
+                    </button>
+                ))}
             </div>
 
-            {/* Quiz Modal */}
-            {activeQuiz && (
-                <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="relative w-full max-w-2xl bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden animate-fadeIn">
-                        {/* Result View */}
-                        {quizResult ? (
-                            <div className="p-8 text-center space-y-6">
-                                <div
-                                    className={`w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl ${
-                                        quizResult.passed
-                                            ? 'bg-emerald-100 text-emerald-600 border border-emerald-200'
-                                            : 'bg-amber-100 text-amber-700 border border-amber-200'
-                                    }`}
-                                >
-                                    {quizResult.passed ? '🏅' : '💡'}
-                                </div>
-
-                                <div>
-                                    <h3 className="text-2xl font-bold text-slate-900">
-                                        {quizResult.passed ? 'Skill Verified!' : 'Assessment Completed'}
-                                    </h3>
-                                    <p className="text-sm text-slate-600 mt-2 max-w-md mx-auto">
-                                        {quizResult.feedback}
-                                    </p>
-                                </div>
-
-                                <div className="max-w-sm mx-auto bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-around">
-                                    <div>
-                                        <div className="text-2xl font-black text-slate-900">
-                                            {quizResult.scorePercentage}%
-                                        </div>
-                                        <div className="text-xs text-slate-500 font-medium">Your Score</div>
-                                    </div>
-                                    <div className="h-8 border-l border-slate-300"></div>
-                                    <div>
-                                        <div className="text-2xl font-black text-slate-900">
-                                            {quizResult.correctCount} / {quizResult.totalQuestions}
-                                        </div>
-                                        <div className="text-xs text-slate-500 font-medium">Correct Answers</div>
-                                    </div>
-                                    <div className="h-8 border-l border-slate-300"></div>
-                                    <div>
-                                        <div
-                                            className={`text-sm font-bold uppercase tracking-wider ${
-                                                quizResult.passed ? 'text-emerald-600' : 'text-amber-700'
-                                            }`}
-                                        >
-                                            {quizResult.passed ? 'PASSED' : 'RETRY'}
-                                        </div>
-                                        <div className="text-xs text-slate-500 font-medium">Result</div>
-                                    </div>
-                                </div>
-
-                                {quizResult.passed && quizResult.badge && (
-                                    <div className="p-4 bg-blue-50/70 border border-blue-200 rounded-xl text-left flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center text-xl font-bold">
-                                            🛡️
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="text-xs font-bold text-blue-800 uppercase tracking-wider">
-                                                New Credential Earned
-                                            </div>
-                                            <div className="text-sm font-bold text-slate-900">
-                                                {quizResult.badge.badgeTitle}
-                                            </div>
-                                            <div className="text-xs text-slate-600 mt-0.5">
-                                                Automatically attached to your profile and search result cards.
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div className="flex justify-center gap-3 pt-2">
-                                    <button
-                                        onClick={() => {
-                                            setActiveQuiz(null);
-                                            setQuizResult(null);
-                                        }}
-                                        className="px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors"
-                                    >
-                                        Done & View Badges
-                                    </button>
-                                </div>
-                            </div>
-                        ) : (
-                            /* Active Quiz Question View */
+            {/* 4. Assessment Cards Grid */}
+            <div className="assessment-grid">
+                {filteredAssessments.map((topic) => {
+                    const passed = isTopicPassed(topic);
+                    return (
+                        <div key={topic.topicId} className="assessment-card">
                             <div>
-                                {/* Quiz Header */}
-                                <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-                                    <div>
-                                        <h3 className="text-base font-bold text-slate-900">{activeQuiz.title}</h3>
-                                        <span className="text-xs text-slate-500">
-                                            Question {currentQIndex + 1} of {activeQuiz.questions.length}
+                                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '1rem' }}>
+                                    <div className="assessment-icon-box">
+                                        {topic.icon || '💻'}
+                                    </div>
+                                    {passed ? (
+                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.25rem 0.65rem', borderRadius: '9999px', background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', fontSize: '0.72rem', fontWeight: 700 }}>
+                                            <Check size={12} strokeWidth={3} />
+                                            <span>VERIFIED</span>
                                         </span>
-                                    </div>
-                                    <div
-                                        className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold border ${
-                                            timeLeftSeconds < 60
-                                                ? 'bg-amber-50 text-amber-700 border-amber-300 animate-pulse'
-                                                : 'bg-white text-slate-800 border-slate-200'
-                                        }`}
-                                    >
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                            />
-                                        </svg>
-                                        <span>{formatTimer(timeLeftSeconds)}</span>
-                                    </div>
+                                    ) : (
+                                        <span style={{ padding: '0.25rem 0.55rem', borderRadius: '6px', background: '#f1f5f9', color: '#475569', fontSize: '0.72rem', fontWeight: 600 }}>
+                                            {topic.category || 'Engineering'}
+                                        </span>
+                                    )}
                                 </div>
 
-                                {/* Progress Bar */}
-                                <div className="w-full bg-slate-100 h-1.5">
-                                    <div
-                                        className="bg-blue-600 h-1.5 transition-all duration-300"
-                                        style={{
-                                            width: `${((currentQIndex + 1) / activeQuiz.questions.length) * 100}%`
-                                        }}
-                                    />
+                                <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 0.4rem 0' }}>
+                                    {topic.title}
+                                </h3>
+                                <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5, minHeight: '3.6em' }}>
+                                    {topic.description}
+                                </p>
+                            </div>
+
+                            <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid #f1f5f9' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                                        <Clock size={13} color="var(--text-muted)" />
+                                        <span>{topic.durationMinutes || 5} Mins</span>
+                                    </span>
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                                        <HelpCircle size={13} color="var(--text-muted)" />
+                                        <span>{topic.totalQuestions || 5} Questions</span>
+                                    </span>
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                                        <Target size={13} color="var(--text-muted)" />
+                                        <span>Pass: 70%</span>
+                                    </span>
                                 </div>
 
-                                {/* Question Body */}
-                                {activeQuiz.questions[currentQIndex] && (
-                                    <div className="p-6 space-y-5">
-                                        <h4 className="text-base font-semibold text-slate-900 leading-relaxed">
-                                            {activeQuiz.questions[currentQIndex].question}
-                                        </h4>
+                                <button
+                                    type="button"
+                                    onClick={() => handleStartQuiz(topic.topicId)}
+                                    className={passed ? 'btn btn-secondary' : 'btn btn-primary'}
+                                    style={{
+                                        width: '100%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '0.5rem',
+                                        padding: '0.65rem 1rem',
+                                        fontSize: '0.85rem',
+                                        fontWeight: 700,
+                                    }}
+                                >
+                                    {passed ? (
+                                        <>
+                                            <RotateCcw size={15} />
+                                            <span>Retake Assessment</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span>Take Skill Assessment</span>
+                                            <ArrowRight size={15} />
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
 
-                                        <div className="space-y-2.5">
-                                            {activeQuiz.questions[currentQIndex].options.map((option, optIdx) => {
-                                                const qId = activeQuiz.questions[currentQIndex].id;
-                                                const isSelected = answers[qId] === optIdx;
-                                                return (
-                                                    <label
-                                                        key={optIdx}
-                                                        onClick={() => handleSelectOption(qId, optIdx)}
-                                                        className={`flex items-start gap-3 p-3.5 border rounded-lg cursor-pointer transition-all ${
-                                                            isSelected
-                                                                ? 'bg-blue-50/70 border-blue-500 shadow-sm ring-1 ring-blue-500'
-                                                                : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'
-                                                        }`}
-                                                    >
-                                                        <input
-                                                            type="radio"
-                                                            name={`question-${qId}`}
-                                                            checked={isSelected}
-                                                            onChange={() => handleSelectOption(qId, optIdx)}
-                                                            className="mt-0.5 text-blue-600 focus:ring-blue-500 h-4 w-4 border-slate-300"
-                                                        />
-                                                        <span
-                                                            className={`text-sm leading-snug ${
-                                                                isSelected
-                                                                    ? 'font-medium text-slate-900'
-                                                                    : 'text-slate-700'
-                                                            }`}
-                                                        >
-                                                            {option}
-                                                        </span>
-                                                    </label>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Footer Controls */}
-                                <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+            {/* 5. Interactive Assessment Runner Modal */}
+            {activeQuiz && (
+                <div className="modal-overlay">
+                    <div className="modal-content" style={{ maxWidth: '680px', padding: '0', overflow: 'hidden' }}>
+                        {/* Modal Header */}
+                        <div style={{ padding: '1.25rem 1.75rem', background: '#f8fafc', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div>
+                                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                    {activeQuiz.category || 'Skill Assessment'}
+                                </div>
+                                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0.2rem 0 0 0' }}>
+                                    {activeQuiz.title}
+                                </h3>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                {/* Countdown Clock */}
+                                <div style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.4rem',
+                                    padding: '0.35rem 0.75rem',
+                                    borderRadius: '6px',
+                                    background: timeLeftSeconds < 60 ? '#fee2e2' : '#e0f2fe',
+                                    color: timeLeftSeconds < 60 ? '#dc2626' : 'var(--color-primary)',
+                                    fontWeight: 700,
+                                    fontSize: '0.85rem',
+                                    fontVariantNumeric: 'tabular-nums',
+                                }}>
+                                    <Clock size={15} />
+                                    <span>{formatTimer(timeLeftSeconds)}</span>
+                                </div>
+                                {!quizResult && (
                                     <button
                                         type="button"
                                         onClick={() => {
-                                            if (
-                                                window.confirm(
-                                                    'Are you sure you want to exit? Your progress will be discarded.'
-                                                )
-                                            ) {
+                                            if (window.confirm('Are you sure you want to exit? Your progress in this assessment will be lost.')) {
                                                 setActiveQuiz(null);
                                             }
                                         }}
-                                        className="text-xs font-semibold text-slate-500 hover:text-slate-700"
+                                        style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', padding: '0.25rem' }}
+                                        title="Exit Assessment"
                                     >
-                                        Abandon Quiz
+                                        <X size={20} />
                                     </button>
+                                )}
+                            </div>
+                        </div>
 
-                                    <div className="flex items-center gap-2">
+                        {/* Modal Body */}
+                        <div style={{ padding: '1.75rem' }}>
+                            {quizResult ? (
+                                /* Result View */
+                                <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+                                    <div style={{
+                                        width: '64px',
+                                        height: '64px',
+                                        borderRadius: '50%',
+                                        background: quizResult.passed ? '#dcfce7' : '#fee2e2',
+                                        color: quizResult.passed ? '#15803d' : '#b91c1c',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '1.75rem',
+                                        margin: '0 auto 1.25rem auto',
+                                        fontWeight: 800,
+                                    }}>
+                                        {quizResult.passed ? '✓' : '✕'}
+                                    </div>
+                                    <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 0.5rem 0' }}>
+                                        {quizResult.passed ? 'Congratulations! Badge Earned 🎉' : 'Assessment Completed'}
+                                    </h2>
+                                    <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', maxWidth: '420px', margin: '0 auto 1.5rem auto' }}>
+                                        {quizResult.passed
+                                            ? `You scored ${quizResult.scorePercentage || Math.round((quizResult.correctAnswers / (quizResult.totalQuestions || 5)) * 100)}%, exceeding the 70% threshold. This verified skill badge is now added to your profile!`
+                                            : `You scored ${quizResult.scorePercentage || Math.round((quizResult.correctAnswers / (quizResult.totalQuestions || 5)) * 100)}%. The pass threshold is 70%. Review the topics and feel free to retake the quiz anytime.`}
+                                    </p>
+
+                                    <div style={{ display: 'inline-flex', gap: '2rem', padding: '1rem 2rem', background: '#f8fafc', borderRadius: '10px', border: '1px solid var(--border-subtle)', marginBottom: '1.75rem' }}>
+                                        <div>
+                                            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: quizResult.passed ? '#057642' : 'var(--text-primary)' }}>
+                                                {quizResult.scorePercentage || Math.round((quizResult.correctAnswers / (quizResult.totalQuestions || 5)) * 100)}%
+                                            </div>
+                                            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Your Score</div>
+                                        </div>
+                                        <div style={{ borderLeft: '1px solid #e2e8f0', paddingLeft: '2rem' }}>
+                                            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                                                {quizResult.correctAnswers || 0} / {quizResult.totalQuestions || 5}
+                                            </div>
+                                            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Correct Answers</div>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveQuiz(null)}
+                                            className="btn btn-primary"
+                                            style={{ minWidth: '160px', padding: '0.65rem 1.5rem', fontWeight: 700 }}
+                                        >
+                                            Done & Close
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleStartQuiz(activeQuiz.topicId)}
+                                            className="btn btn-outline"
+                                            style={{ minWidth: '140px', padding: '0.65rem 1.5rem', fontWeight: 600 }}
+                                        >
+                                            Retake Quiz
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                /* Question Runner View */
+                                <div>
+                                    {/* Progress bar */}
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '0.5rem' }}>
+                                        <span>Question {currentQIndex + 1} of {activeQuiz.questions?.length || 5}</span>
+                                        <span>{Math.round(((currentQIndex + 1) / (activeQuiz.questions?.length || 5)) * 100)}% completed</span>
+                                    </div>
+                                    <div style={{ width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '9999px', overflow: 'hidden', marginBottom: '1.5rem' }}>
+                                        <div style={{
+                                            width: `${((currentQIndex + 1) / (activeQuiz.questions?.length || 5)) * 100}%`,
+                                            height: '100%',
+                                            background: 'var(--color-primary)',
+                                            transition: 'width 0.3s ease',
+                                        }} />
+                                    </div>
+
+                                    {/* Question Card */}
+                                    {activeQuiz.questions && activeQuiz.questions[currentQIndex] && (
+                                        <div>
+                                            <h4 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.5, marginBottom: '1.25rem' }}>
+                                                {activeQuiz.questions[currentQIndex].question}
+                                            </h4>
+
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                                {activeQuiz.questions[currentQIndex].options.map((option, optIdx) => {
+                                                    const qId = activeQuiz.questions[currentQIndex].id;
+                                                    const isSelected = answers[qId] === optIdx;
+                                                    return (
+                                                        <div
+                                                            key={optIdx}
+                                                            className={`assessment-option-card ${isSelected ? 'selected' : ''}`}
+                                                            onClick={() => handleSelectOption(qId, optIdx)}
+                                                        >
+                                                            <div style={{
+                                                                width: '20px',
+                                                                height: '20px',
+                                                                borderRadius: '50%',
+                                                                border: isSelected ? '6px solid var(--color-primary)' : '2px solid #cbd5e1',
+                                                                background: '#ffffff',
+                                                                flexShrink: 0,
+                                                                transition: 'all var(--transition-fast)',
+                                                            }} />
+                                                            <span style={{ fontSize: '0.875rem', color: isSelected ? 'var(--color-primary-dark, #004182)' : 'var(--text-primary)', fontWeight: isSelected ? 600 : 400 }}>
+                                                                {option}
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Navigation buttons */}
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '2rem', paddingTop: '1.25rem', borderTop: '1px solid #f1f5f9' }}>
                                         <button
                                             type="button"
                                             disabled={currentQIndex === 0}
-                                            onClick={() => setCurrentQIndex((prev) => Math.max(0, prev - 1))}
-                                            className="px-3.5 py-1.5 text-xs font-medium border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                                            onClick={() => setCurrentQIndex((prev) => prev - 1)}
+                                            className="btn btn-secondary"
+                                            style={{ opacity: currentQIndex === 0 ? 0.4 : 1, padding: '0.55rem 1.15rem', fontSize: '0.825rem' }}
                                         >
                                             Previous
                                         </button>
 
-                                        {currentQIndex < activeQuiz.questions.length - 1 ? (
+                                        {currentQIndex < (activeQuiz.questions?.length || 5) - 1 ? (
                                             <button
                                                 type="button"
-                                                onClick={() =>
-                                                    setCurrentQIndex((prev) =>
-                                                        Math.min(activeQuiz.questions.length - 1, prev + 1)
-                                                    )
-                                                }
-                                                className="px-4 py-1.5 text-xs font-semibold bg-slate-900 text-white rounded-lg hover:bg-slate-800"
+                                                onClick={() => setCurrentQIndex((prev) => prev + 1)}
+                                                className="btn btn-primary"
+                                                style={{ padding: '0.55rem 1.35rem', fontSize: '0.825rem', fontWeight: 700 }}
                                             >
                                                 Next Question
                                             </button>
@@ -457,15 +496,16 @@ export default function CandidateAssessmentsPage() {
                                                 type="button"
                                                 disabled={submitting}
                                                 onClick={handleSubmitQuiz}
-                                                className="px-5 py-1.5 text-xs font-bold bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm disabled:opacity-50"
+                                                className="btn btn-primary"
+                                                style={{ background: '#057642', borderColor: '#057642', padding: '0.55rem 1.5rem', fontSize: '0.825rem', fontWeight: 700 }}
                                             >
-                                                {submitting ? 'Grading...' : 'Submit Assessment'}
+                                                {submitting ? 'Scoring Assessment...' : 'Submit Assessment'}
                                             </button>
                                         )}
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

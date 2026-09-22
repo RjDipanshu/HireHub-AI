@@ -20,6 +20,10 @@ export const ApplicationStatusBadge = ({ status = 'APPLIED' }) => {
         return { variant: 'danger', icon: XCircle, label: 'Not Selected' };
       case 'WITHDRAWN':
         return { variant: 'secondary', icon: XCircle, label: 'Withdrawn' };
+      case 'REDIRECTED':
+        return { variant: 'ai', icon: Sparkles, label: 'External (Redirected)' };
+      case 'SUBMITTED':
+        return { variant: 'success', icon: CheckCircle2, label: 'Submitted' };
       default:
         return { variant: 'primary', icon: Clock, label: status };
     }

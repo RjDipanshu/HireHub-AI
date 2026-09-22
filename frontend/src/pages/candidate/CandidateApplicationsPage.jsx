@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import applicationService from '../../services/applicationService';
 import ApplicationStatusBadge from '../../components/applications/ApplicationStatusBadge';
+import JobSourceBadge from '../../components/jobs/JobSourceBadge';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import {
   FileText,
@@ -132,7 +133,10 @@ export const CandidateApplicationsPage = () => {
     return applications.filter((app) => {
       if (activeTab === 'ALL') return true;
       if (activeTab === 'ACTIVE') {
-        return ['APPLIED', 'IN_REVIEW', 'SHORTLISTED'].includes(app.status);
+        return ['APPLIED', 'IN_REVIEW', 'SHORTLISTED', 'REDIRECTED'].includes(app.status);
+      }
+      if (activeTab === 'EXTERNAL') {
+        return app.applicationSource === 'EXTERNAL' || app.status === 'REDIRECTED';
       }
       if (activeTab === 'INTERVIEW') {
         return app.status === 'INTERVIEW_SCHEDULED';
@@ -167,12 +171,14 @@ export const CandidateApplicationsPage = () => {
     return <LoadingSpinner label="Retrieving your submitted applications..." size="lg" />;
   }
 
+  const externalAppsCount = applications.filter((a) => a.applicationSource === 'EXTERNAL' || a.status === 'REDIRECTED').length;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       <div>
         <h1 style={{ fontSize: '2rem', marginBottom: '0.35rem' }}>My Applications & Pipeline</h1>
         <p style={{ color: 'var(--text-secondary)' }}>
-          Track real-time hiring progress, interview invitations, and status milestones.
+          Track real-time hiring progress, external ATS redirects, interview invitations, and status milestones.
         </p>
       </div>
 
@@ -190,8 +196,17 @@ export const CandidateApplicationsPage = () => {
           onClick={() => setActiveTab('ACTIVE')}
           className={`btn btn-sm ${activeTab === 'ACTIVE' ? 'btn-primary' : 'btn-outline'}`}
         >
-          Active / In Review ({applications.filter((a) => ['APPLIED', 'IN_REVIEW', 'SHORTLISTED'].includes(a.status)).length})
+          Active / In Review ({applications.filter((a) => ['APPLIED', 'IN_REVIEW', 'SHORTLISTED', 'REDIRECTED'].includes(a.status)).length})
         </button>
+        {externalAppsCount > 0 && (
+          <button
+            type="button"
+            onClick={() => setActiveTab('EXTERNAL')}
+            className={`btn btn-sm ${activeTab === 'EXTERNAL' ? 'btn-primary' : 'btn-outline'}`}
+          >
+            External ATS Tracked ({externalAppsCount})
+          </button>
+        )}
         <button
           type="button"
           onClick={() => setActiveTab('INTERVIEW')}
@@ -243,6 +258,13 @@ export const CandidateApplicationsPage = () => {
                       <span style={{ fontSize: '0.9rem', color: 'var(--primary-300)', fontWeight: 600 }}>
                         {app.companyName || 'Tech Partner'}
                       </span>
+                      {app.applicationSource === 'EXTERNAL' || app.status === 'REDIRECTED' ? (
+                        <span style={{ fontSize: '0.72rem', padding: '0.1rem 0.45rem', borderRadius: '4px', background: 'rgba(14, 165, 233, 0.12)', color: '#0284c7', border: '1px solid rgba(14, 165, 233, 0.3)', fontWeight: 600 }}>
+                          External ATS
+                        </span>
+                      ) : (
+                        <JobSourceBadge sourceType="INTERNAL" size="xs" />
+                      )}
                       {app.location && (
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                           • {app.location}
@@ -261,7 +283,24 @@ export const CandidateApplicationsPage = () => {
                           <FileText size={14} /> {app.resumeName}
                         </span>
                       )}
-                      {app.viewedByRecruiterAt ? (
+                      {app.applicationSource === 'EXTERNAL' || app.status === 'REDIRECTED' ? (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            fontSize: '0.78rem',
+                            color: '#0284c7',
+                            backgroundColor: '#f0f9ff',
+                            border: '1px solid #bae6fd',
+                            padding: '0.15rem 0.55rem',
+                            borderRadius: '9999px',
+                            fontWeight: 600,
+                          }}
+                        >
+                          <ExternalLink size={12} /> External tracking recorded
+                        </span>
+                      ) : app.viewedByRecruiterAt ? (
                         <span
                           style={{
                             display: 'inline-flex',
@@ -314,68 +353,97 @@ export const CandidateApplicationsPage = () => {
                   </div>
                 </div>
 
-                {/* Pipeline Stepper Visual */}
-                <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-subtle)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
-                    {PIPELINE_STAGES.map((stage, sIdx) => {
-                      const isCompleted = !isRejected && currentStageIdx >= sIdx;
-                      const isCurrent = !isRejected && currentStageIdx === sIdx;
+                {/* Stepper or External Redirection Tracking Visual */}
+                {app.applicationSource === 'EXTERNAL' || app.status === 'REDIRECTED' ? (
+                  <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--border-subtle)', background: '#f8fafc', padding: '1rem 1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#e0f2fe', color: '#0369a1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <ExternalLink size={18} />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f172a' }}>
+                          External ATS Redirection Verified
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                          Status recorded as <strong>REDIRECTED</strong>. Final submission status is confirmed by partner ATS webhook.
+                        </div>
+                      </div>
+                    </div>
+                    {(app.applicationUrl || app.externalUrl) && (
+                      <a
+                        href={app.applicationUrl || app.externalUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-primary btn-xs"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: 600 }}
+                      >
+                        Complete on Career Site <ExternalLink size={12} />
+                      </a>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-subtle)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
+                      {PIPELINE_STAGES.map((stage, sIdx) => {
+                        const isCompleted = !isRejected && currentStageIdx >= sIdx;
+                        const isCurrent = !isRejected && currentStageIdx === sIdx;
 
-                      return (
-                        <div
-                          key={stage.key}
-                          style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            flex: 1,
-                            position: 'relative',
-                            textAlign: 'center',
-                          }}
-                        >
+                        return (
                           <div
+                            key={stage.key}
                             style={{
-                              width: '28px',
-                              height: '28px',
-                              borderRadius: '50%',
                               display: 'flex',
+                              flexDirection: 'column',
                               alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '0.75rem',
-                              fontWeight: 700,
-                              background: isCompleted
-                                ? '#10b981'
-                                : isCurrent
-                                ? 'var(--primary-500)'
-                                : 'var(--bg-tertiary)',
-                              color: isCompleted || isCurrent ? '#ffffff' : 'var(--text-muted)',
-                              border: `2px solid ${
-                                isCompleted
+                              flex: 1,
+                              position: 'relative',
+                              textAlign: 'center',
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: '28px',
+                                height: '28px',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
+                                background: isCompleted
                                   ? '#10b981'
                                   : isCurrent
-                                  ? 'var(--primary-400)'
-                                  : 'var(--border-subtle)'
-                              }`,
-                              zIndex: 2,
-                            }}
-                          >
-                            {isCompleted ? '✓' : sIdx + 1}
+                                  ? 'var(--primary-500)'
+                                  : 'var(--bg-tertiary)',
+                                color: isCompleted || isCurrent ? '#ffffff' : 'var(--text-muted)',
+                                border: `2px solid ${
+                                  isCompleted
+                                    ? '#10b981'
+                                    : isCurrent
+                                    ? 'var(--primary-400)'
+                                    : 'var(--border-subtle)'
+                                }`,
+                                zIndex: 2,
+                              }}
+                            >
+                              {isCompleted ? '✓' : sIdx + 1}
+                            </div>
+                            <span
+                              style={{
+                                fontSize: '0.75rem',
+                                marginTop: '0.35rem',
+                                color: isCurrent ? 'var(--primary-300)' : isCompleted ? 'var(--text-primary)' : 'var(--text-muted)',
+                                fontWeight: isCurrent ? 700 : 500,
+                              }}
+                            >
+                              {stage.label}
+                            </span>
                           </div>
-                          <span
-                            style={{
-                              fontSize: '0.75rem',
-                              marginTop: '0.35rem',
-                              color: isCurrent ? 'var(--primary-300)' : isCompleted ? 'var(--text-primary)' : 'var(--text-muted)',
-                              fontWeight: isCurrent ? 700 : 500,
-                            }}
-                          >
-                            {stage.label}
-                          </span>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Expanded Details Drawer */}
                 {isExpanded && (

@@ -38,6 +38,15 @@ public class JobApplicationController {
                 .body(jobApplicationService.applyForJob(supabaseUserId, dto));
     }
 
+    @PostMapping({"/jobs/{jobId}/apply-external", "/job/{jobId}/apply-external"})
+    public ResponseEntity<JobApplicationResponseDTO> trackExternalApplication(
+            @PathVariable UUID jobId,
+            @AuthenticationPrincipal Jwt jwt) {
+        UUID supabaseUserId = UUID.fromString(jwt.getSubject());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(jobApplicationService.trackExternalApplication(supabaseUserId, jobId));
+    }
+
     @GetMapping("/me")
     public ResponseEntity<List<JobApplicationResponseDTO>> getMyApplications(
             @AuthenticationPrincipal Jwt jwt) {

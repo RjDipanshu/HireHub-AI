@@ -52,4 +52,17 @@ public class JobApplication extends BaseEntity {
 
     @Column(name = "viewed_by_recruiter_at")
     private java.time.LocalDateTime viewedByRecruiterAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "application_source", nullable = false)
+    private com.hirehub.hirehub_backend.enums.ApplicationSource applicationSource = com.hirehub.hirehub_backend.enums.ApplicationSource.HIREHUB;
+
+    @Column(name = "external_job_id")
+    private String externalJobId;
+
+    @Column(name = "application_url", length = 1000)
+    private String applicationUrl;
+
+    @Column(name = "applied_at")
+    private java.time.LocalDateTime appliedAt = java.time.LocalDateTime.now();
 }

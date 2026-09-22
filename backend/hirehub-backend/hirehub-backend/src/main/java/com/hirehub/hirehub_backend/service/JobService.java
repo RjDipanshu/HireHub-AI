@@ -16,7 +16,6 @@ import com.hirehub.hirehub_backend.enums.WorkMode;
 import com.hirehub.hirehub_backend.repository.CompanyRepository;
 import com.hirehub.hirehub_backend.repository.JobApplicationRepository;
 import com.hirehub.hirehub_backend.repository.JobRepository;
-import com.hirehub.hirehub_backend.repository.JobSkillRepository;
 import com.hirehub.hirehub_backend.repository.JobSpecification;
 import com.hirehub.hirehub_backend.repository.RecruiterProfileRepository;
 import com.hirehub.hirehub_backend.repository.SavedJobRepository;
@@ -41,7 +40,6 @@ import java.util.stream.Collectors;
 public class JobService {
 
     private final JobRepository jobRepository;
-    private final JobSkillRepository jobSkillRepository;
     private final CompanyRepository companyRepository;
     private final RecruiterProfileRepository recruiterProfileRepository;
     private final SkillRepository skillRepository;

@@ -1,46 +1,57 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { 
+  Send, 
+  Search, 
+  Sparkles, 
+  MessageSquare, 
+  Building2, 
+  ShieldCheck, 
+  Check, 
+  CheckCheck, 
+  Paperclip, 
+  Smile, 
+  Clock, 
+  MoreVertical,
+  Briefcase
+} from 'lucide-react';
 import messageService from '../../services/messageService';
 import useRealtimeMessages from '../../hooks/useRealtimeMessages';
 
 export default function MessagesPage() {
-    const [threads, setThreads]           = useState([]);
+    const [threads, setThreads] = useState([]);
     const [activeThread, setActiveThread] = useState(null);
-    const [messages, setMessages]         = useState([]);
+    const [messages, setMessages] = useState([]);
     const [loadingThreads, setLoadingThreads] = useState(true);
     const [loadingMessages, setLoadingMessages] = useState(false);
-    const [replyText, setReplyText]       = useState('');
-    const [sending, setSending]           = useState(false);
-    const [searchQuery, setSearchQuery]   = useState('');
+    const [replyText, setReplyText] = useState('');
+    const [sending, setSending] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
     const messagesEndRef = useRef(null);
-    const activeThreadRef = useRef(null); // stable ref for callbacks
+    const activeThreadRef = useRef(null);
 
-    // ── Real-Time: SSE with adaptive polling fallback ──────────────────────────
+    // Real-Time SSE listener with polling fallback
     const handleNewMessage = useCallback((event) => {
-        // If event belongs to the active thread, reload messages immediately
         if (event.threadId && activeThreadRef.current?.otherUserId === event.threadId) {
             loadMessages(event.threadId, false);
         }
-        // Always refresh thread list to update unread counts
         loadThreadsSilently();
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, []);
 
     const { isLive, latestEvent } = useRealtimeMessages({
         onNewMessage: handleNewMessage,
         enabled: true,
     });
 
-    // Respond to POLL_TICK events from the hook's fallback polling
     useEffect(() => {
         if (!latestEvent || latestEvent.type !== 'POLL_TICK') return;
         if (!activeThreadRef.current) return;
         loadMessages(activeThreadRef.current.otherUserId, false);
-    }, [latestEvent]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [latestEvent]);
 
     useEffect(() => {
         loadThreads();
     }, []);
 
-    // Keep ref in sync with state for stable callbacks
     useEffect(() => {
         activeThreadRef.current = activeThread;
     }, [activeThread]);
@@ -48,12 +59,11 @@ export default function MessagesPage() {
     useEffect(() => {
         if (!activeThread) return;
         loadMessages(activeThread.otherUserId, true);
-        // Polling is now handled by useRealtimeMessages hook — no setInterval needed
     }, [activeThread]);
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages]);
+    }, [messages.length, activeThread?.otherUserId]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -74,7 +84,6 @@ export default function MessagesPage() {
         }
     };
 
-    // Silent refresh for thread list (unread counts) without full loading state
     const loadThreadsSilently = async () => {
         try {
             const data = await messageService.getThreads();
@@ -87,7 +96,6 @@ export default function MessagesPage() {
         try {
             const data = await messageService.getConversation(userId);
             setMessages(data || []);
-            // Mark unread as read in thread count
             setThreads((prev) =>
                 prev.map((t) => (t.otherUserId === userId ? { ...t, unreadCount: 0 } : t))
             );
@@ -98,42 +106,41 @@ export default function MessagesPage() {
         }
     };
 
-    const handleSendReply = async (e) => {
-        if (e) e.preventDefault();
+    const handleSendMessage = async (e) => {
+        e?.preventDefault();
         if (!replyText.trim() || !activeThread || sending) return;
 
-        setSending(true);
         const textToSend = replyText.trim();
         setReplyText('');
+        setSending(true);
+
+        const optimisticMessage = {
+            id: 'temp-' + Date.now(),
+            senderId: 'current-user',
+            senderName: 'You',
+            senderRole: 'CANDIDATE',
+            messageText: textToSend,
+            createdAt: new Date().toISOString(),
+            isPending: true,
+        };
+        setMessages((prev) => [...prev, optimisticMessage]);
 
         try {
-            const sentMsg = await messageService.sendMessage({
+            await messageService.sendMessage({
                 recipientId: activeThread.otherUserId,
-                subject: `Re: ${activeThread.lastMessageSubject || 'Conversation'}`,
-                messageText: textToSend
+                messageText: textToSend,
+                subject: activeThread.lastMessageSubject || 'InMail Response',
             });
 
-            // Append to current messages
-            const optimisticMsg = {
-                id: sentMsg.id || 'temp-' + Date.now(),
-                senderId: 'current-user',
-                senderName: 'You',
-                senderRole: 'ME',
-                subject: sentMsg.subject || 'Direct Message',
-                messageText: textToSend,
-                createdAt: new Date().toISOString(),
-                isRead: true
-            };
-            setMessages((prev) => [...prev, optimisticMsg]);
+            await loadMessages(activeThread.otherUserId, false);
 
-            // Update thread list preview
             setThreads((prev) =>
                 prev.map((t) =>
                     t.otherUserId === activeThread.otherUserId
                         ? {
                               ...t,
                               lastMessageText: textToSend,
-                              lastMessageAt: new Date().toISOString()
+                              lastMessageAt: new Date().toISOString(),
                           }
                         : t
                 )
@@ -172,54 +179,90 @@ export default function MessagesPage() {
         }
     };
 
+    const quickReplies = [
+        "Yes, I am actively open to discussing this opportunity.",
+        "Could you share more details regarding the tech stack and compensation range?",
+        "I would be glad to schedule an introductory call this week.",
+        "Thank you for reaching out! Let's connect."
+    ];
+
     return (
-        <div className="max-w-7xl mx-auto px-4 py-6">
-            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col md:flex-row h-[calc(100vh-140px)] min-h-[600px]">
-                {/* Left Sidebar: Threads List */}
-                <div className="w-full md:w-80 lg:w-96 border-b md:border-b-0 md:border-r border-slate-200 flex flex-col bg-slate-50/50">
-                    <div className="p-4 border-b border-slate-200 bg-white">
-                        <div className="flex items-center justify-between mb-3">
-                            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                                <span>💬</span> Direct Messages
-                            </h2>
-                            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
-                                {threads.length} threads
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* Header info */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div>
+                    <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
+                        Messages & Direct InMail
+                    </h1>
+                    <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                        Connect directly with verified corporate recruiters and engineering managers.
+                    </p>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            padding: '4px 10px',
+                            borderRadius: '9999px',
+                            background: isLive ? '#ecfdf5' : '#fffbeb',
+                            color: isLive ? '#057642' : '#b25e00',
+                            border: `1px solid ${isLive ? '#bbf7d0' : '#fde68a'}`,
+                        }}
+                    >
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: isLive ? '#10b981' : '#f59e0b' }} />
+                        <span>{isLive ? 'Real-Time Connected' : 'Adaptive Polling'}</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* InMail Chat Container */}
+            <div className="inmail-container">
+                {/* Left Panel: Conversation Threads */}
+                <div className="inmail-sidebar">
+                    <div className="inmail-sidebar-header">
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                <MessageSquare size={16} color="var(--color-primary)" />
+                                <span>Conversations</span>
+                            </div>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '2px 8px', borderRadius: '9999px', background: '#eff6ff', color: 'var(--color-primary)' }}>
+                                {threads.length} active
                             </span>
                         </div>
-                        <div className="relative">
+
+                        {/* Search Input */}
+                        <div className="inmail-search-box">
+                            <Search size={15} color="#94a3b8" />
                             <input
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search by name or message..."
-                                className="w-full pl-9 pr-3.5 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-slate-900"
+                                placeholder="Search conversations or contacts..."
+                                className="inmail-search-input"
                             />
-                            <svg
-                                className="w-4 h-4 text-slate-400 absolute left-3 top-2.5"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                />
-                            </svg>
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
+                    {/* Threads List */}
+                    <div className="inmail-threads-list">
                         {loadingThreads ? (
-                            <div className="p-4 space-y-3">
+                            <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                 {[1, 2, 3].map((n) => (
-                                    <div key={n} className="h-16 bg-slate-200 rounded-lg animate-pulse" />
+                                    <div key={n} style={{ height: '60px', background: '#f1f5f9', borderRadius: '8px' }} />
                                 ))}
                             </div>
                         ) : filteredThreads.length === 0 ? (
-                            <div className="p-8 text-center text-slate-500">
-                                <p className="text-xs">No conversations found.</p>
+                            <div style={{ padding: '2.5rem 1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                                <MessageSquare size={32} color="#cbd5e1" style={{ margin: '0 auto 0.5rem auto' }} />
+                                <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>No conversations found</div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                                    Recruiters who message you will appear here.
+                                </div>
                             </div>
                         ) : (
                             filteredThreads.map((thread) => {
@@ -227,59 +270,50 @@ export default function MessagesPage() {
                                 return (
                                     <button
                                         key={thread.otherUserId}
+                                        type="button"
                                         onClick={() => setActiveThread(thread)}
-                                        className={`w-full text-left p-4 flex items-start gap-3 transition-colors ${
-                                            isSelected
-                                                ? 'bg-blue-50/80 border-l-4 border-blue-600'
-                                                : 'hover:bg-slate-100/70'
-                                        }`}
+                                        className={`inmail-thread-item ${isSelected ? 'active' : ''}`}
                                     >
-                                        <div className="relative">
+                                        <div className="inmail-avatar">
                                             {thread.otherUserProfileImage ? (
                                                 <img
                                                     src={thread.otherUserProfileImage}
                                                     alt={thread.otherUserName}
-                                                    className="w-10 h-10 rounded-full object-cover border border-slate-200"
+                                                    className="inmail-avatar-img"
+                                                    style={{ width: '44px', height: '44px', minWidth: '44px', maxWidth: '44px', borderRadius: '50%', objectFit: 'cover' }}
                                                 />
                                             ) : (
-                                                <div className="w-10 h-10 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm">
-                                                    {(thread.otherUserName || 'U')[0]}
+                                                <div className="inmail-avatar-fallback">
+                                                    {(thread.otherUserName || 'U')[0].toUpperCase()}
                                                 </div>
                                             )}
-                                            {thread.unreadCount > 0 && (
-                                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-600 rounded-full border-2 border-white" />
-                                            )}
+                                            <span className="inmail-status-dot" />
                                         </div>
 
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center justify-between mb-0.5">
-                                                <span
-                                                    className={`text-xs truncate ${
-                                                        thread.unreadCount > 0
-                                                            ? 'font-bold text-slate-900'
-                                                            : 'font-semibold text-slate-800'
-                                                    }`}
-                                                >
-                                                    {thread.otherUserName}
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
+                                                <span style={{ fontSize: '0.85rem', fontWeight: thread.unreadCount > 0 ? 800 : 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    {thread.otherUserName?.replace(/\s*\(.*?\)/, '')}
                                                 </span>
-                                                <span className="text-[10px] text-slate-400 whitespace-nowrap ml-2">
+                                                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', marginLeft: '0.5rem' }}>
                                                     {formatTimestamp(thread.lastMessageAt)}
                                                 </span>
                                             </div>
 
-                                            <div className="text-[11px] font-medium text-slate-500 truncate">
-                                                {thread.lastMessageSubject || 'InMail Message'}
+                                            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '0.15rem' }}>
+                                                {thread.lastMessageSubject || 'Direct InMail Opportunity'}
                                             </div>
-                                            <p
-                                                className={`text-xs truncate mt-0.5 ${
-                                                    thread.unreadCount > 0
-                                                        ? 'font-semibold text-slate-900'
-                                                        : 'text-slate-500'
-                                                }`}
-                                            >
+
+                                            <div style={{ fontSize: '0.78rem', color: thread.unreadCount > 0 ? 'var(--text-primary)' : 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: thread.unreadCount > 0 ? 600 : 400 }}>
                                                 {thread.lastMessageText}
-                                            </p>
+                                            </div>
                                         </div>
+
+                                        {thread.unreadCount > 0 && (
+                                            <span style={{ width: '18px', height: '18px', borderRadius: '50%', background: 'var(--color-primary)', color: '#ffffff', fontSize: '0.65rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                                {thread.unreadCount}
+                                            </span>
+                                        )}
                                     </button>
                                 );
                             })
@@ -287,101 +321,104 @@ export default function MessagesPage() {
                     </div>
                 </div>
 
-                {/* Right Panel: Active Chat Thread */}
+                {/* Right Panel: Active Conversation Stream */}
                 {activeThread ? (
-                    <div className="flex-1 flex flex-col bg-white">
-                        {/* Thread Header */}
-                        <div className="p-4 border-b border-slate-200 bg-white flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                {activeThread.otherUserProfileImage ? (
-                                    <img
-                                        src={activeThread.otherUserProfileImage}
-                                        alt={activeThread.otherUserName}
-                                        className="w-10 h-10 rounded-full object-cover border border-slate-200"
-                                    />
-                                ) : (
-                                    <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm">
-                                        {(activeThread.otherUserName || 'U')[0]}
-                                    </div>
-                                )}
+                    <div className="inmail-chat">
+                        {/* Conversation Header */}
+                        <div className="inmail-chat-header">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                                <div className="inmail-avatar" style={{ width: '42px', height: '42px', minWidth: '42px', maxWidth: '42px' }}>
+                                    {activeThread.otherUserProfileImage ? (
+                                        <img
+                                            src={activeThread.otherUserProfileImage}
+                                            alt={activeThread.otherUserName}
+                                            className="inmail-avatar-img"
+                                            style={{ width: '42px', height: '42px', minWidth: '42px', maxWidth: '42px', borderRadius: '50%', objectFit: 'cover' }}
+                                        />
+                                    ) : (
+                                        <div className="inmail-avatar-fallback" style={{ width: '42px', height: '42px' }}>
+                                            {(activeThread.otherUserName || 'U')[0].toUpperCase()}
+                                        </div>
+                                    )}
+                                    <span className="inmail-status-dot" />
+                                </div>
+
                                 <div>
-                                    <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                                        {activeThread.otherUserName}
-                                        <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
-                                            {activeThread.otherUserRole || 'Verified Member'}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                                            {activeThread.otherUserName}
+                                        </h3>
+                                        <span style={{ fontSize: '0.68rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', background: '#dbeafe', color: '#1e40af', letterSpacing: '0.04em' }}>
+                                            {activeThread.otherUserRole || 'RECRUITER'}
                                         </span>
-                                    </h3>
-                                    <p className="text-xs text-slate-500">{activeThread.otherUserEmail}</p>
+                                    </div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.1rem' }}>
+                                        <Building2 size={13} color="#94a3b8" />
+                                        <span>{activeThread.otherUserEmail}</span>
+                                    </div>
                                 </div>
                             </div>
-                            {/* Real-time connection status badge */}
-                            <div
-                                title={isLive ? 'Server-Sent Events active — messages push instantly' : 'Adaptive polling mode — updates every 1.5 s'}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '5px',
-                                    fontSize: '0.7rem',
-                                    fontWeight: 600,
-                                    padding: '3px 8px',
-                                    borderRadius: '12px',
-                                    background: isLive ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
-                                    color: isLive ? '#059669' : '#d97706',
-                                    border: `1px solid ${isLive ? 'rgba(16,185,129,0.3)' : 'rgba(245,158,11,0.3)'}`,
-                                    userSelect: 'none',
-                                }}
-                            >
-                                <span style={{ fontSize: '0.6rem' }}>{isLive ? '●' : '○'}</span>
-                                {isLive ? 'Live' : 'Polling'}
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', color: '#057642', fontWeight: 600, background: '#f0fdf4', padding: '3px 8px', borderRadius: '9999px', border: '1px solid #bbf7d0' }}>
+                                    <ShieldCheck size={13} />
+                                    <span>Verified Recruiter</span>
+                                </span>
                             </div>
                         </div>
 
+                        {/* Messages Stream */}
+                        <div className="inmail-messages-stream">
+                            {/* InMail Notice Card */}
+                            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.75rem 1rem', fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', margin: '0 auto', maxWidth: '520px' }}>
+                                <ShieldCheck size={15} color="var(--color-primary)" />
+                                <span>This conversation is encrypted and protected by HireHub AI anti-spam policies.</span>
+                            </div>
 
-                        {/* Messages Timeline */}
-                        <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-50/40">
                             {loadingMessages ? (
-                                <div className="space-y-4">
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '2rem 0' }}>
                                     {[1, 2, 3].map((n) => (
-                                        <div key={n} className="h-20 bg-slate-100 rounded-xl animate-pulse" />
+                                        <div key={n} style={{ height: '70px', width: n % 2 === 0 ? '60%' : '75%', alignSelf: n % 2 === 0 ? 'flex-end' : 'flex-start', background: '#e2e8f0', borderRadius: '12px' }} />
                                     ))}
                                 </div>
                             ) : messages.length === 0 ? (
-                                <div className="py-12 text-center text-slate-500">
-                                    <p className="text-sm">No messages in this conversation yet.</p>
+                                <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-secondary)' }}>
+                                    <MessageSquare size={36} color="#cbd5e1" style={{ margin: '0 auto 0.5rem auto' }} />
+                                    <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600 }}>No messages yet. Send a greeting to begin!</p>
                                 </div>
                             ) : (
-                                messages.map((msg) => {
-                                    const isMe =
-                                        msg.senderId === 'current-user' ||
-                                        msg.senderRole === 'ME' ||
-                                        msg.senderRole === 'CANDIDATE';
+                                messages.map((m, idx) => {
+                                    const isMe = m.senderRole === 'CANDIDATE' || m.senderId === 'current-user' || m.senderName === 'You';
                                     return (
                                         <div
-                                            key={msg.id}
-                                            className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+                                            key={m.id || idx}
+                                            style={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: isMe ? 'flex-end' : 'flex-start',
+                                                maxWidth: '80%',
+                                                alignSelf: isMe ? 'flex-end' : 'flex-start',
+                                            }}
                                         >
-                                            <div className="flex items-center gap-2 mb-1 px-1">
-                                                <span className="text-[11px] font-bold text-slate-700">
-                                                    {isMe ? 'You' : msg.senderName || activeThread.otherUserName}
-                                                </span>
-                                                <span className="text-[10px] text-slate-400">
-                                                    {formatTimestamp(msg.createdAt)}
-                                                </span>
+                                            {/* Sender title label */}
+                                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.2rem', padding: '0 0.5rem', fontWeight: 600 }}>
+                                                {isMe ? 'You' : (m.senderName || activeThread.otherUserName)}
                                             </div>
 
-                                            <div
-                                                className={`max-w-xl p-4 rounded-xl shadow-xs border text-sm leading-relaxed ${
-                                                    isMe
-                                                        ? 'bg-blue-600 text-white border-blue-600 rounded-tr-none'
-                                                        : 'bg-white text-slate-800 border-slate-200 rounded-tl-none'
-                                                }`}
-                                            >
-                                                {msg.subject && !isMe && (
-                                                    <div className="text-xs font-bold text-blue-800 mb-1 pb-1 border-b border-slate-100">
-                                                        {msg.subject}
+                                            {/* Chat Bubble */}
+                                            <div className={isMe ? 'inmail-bubble-out' : 'inmail-bubble-in'}>
+                                                {m.subject && !isMe && idx === 0 && (
+                                                    <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--color-primary-dark, #004182)', marginBottom: '0.4rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.35rem' }}>
+                                                        {m.subject}
                                                     </div>
                                                 )}
-                                                <p className="whitespace-pre-line">{msg.messageText}</p>
+                                                <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                                                    {m.messageText}
+                                                </div>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.35rem', marginTop: '0.4rem', fontSize: '0.68rem', color: isMe ? 'rgba(255, 255, 255, 0.85)' : 'var(--text-muted)' }}>
+                                                    <span>{formatTimestamp(m.createdAt)}</span>
+                                                    {isMe && <CheckCheck size={13} />}
+                                                </div>
                                             </div>
                                         </div>
                                     );
@@ -390,60 +427,109 @@ export default function MessagesPage() {
                             <div ref={messagesEndRef} />
                         </div>
 
-                        {/* Quick Reply Suggestions */}
-                        <div className="px-4 py-2 bg-white border-t border-slate-100 flex items-center gap-2 overflow-x-auto text-xs">
-                            <span className="text-slate-400 font-medium">Quick suggestions:</span>
-                            {[
-                                'Available for a brief introductory call tomorrow.',
-                                'Could you please share the detailed JD and CTC band?',
-                                'Thank you for connecting! Looking forward to next steps.'
-                            ].map((suggestion, idx) => (
+                        {/* AI Quick Reply Suggestions */}
+                        <div style={{ padding: '0.5rem 1.5rem', background: '#f8fafc', borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '0.5rem', overflowX: 'auto' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.72rem', fontWeight: 700, color: 'var(--color-primary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                <Sparkles size={13} />
+                                <span>Quick Replies:</span>
+                            </div>
+                            {quickReplies.map((reply, idx) => (
                                 <button
                                     key={idx}
                                     type="button"
-                                    onClick={() => handleQuickReply(suggestion)}
-                                    className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors whitespace-nowrap"
+                                    onClick={() => handleQuickReply(reply)}
+                                    style={{
+                                        fontSize: '0.75rem',
+                                        padding: '0.3rem 0.65rem',
+                                        borderRadius: '9999px',
+                                        background: '#ffffff',
+                                        border: '1px solid #cbd5e1',
+                                        color: '#334155',
+                                        cursor: 'pointer',
+                                        whiteSpace: 'nowrap',
+                                        flexShrink: 0,
+                                        transition: 'all var(--transition-fast)',
+                                    }}
+                                    onMouseOver={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.color = 'var(--color-primary)'; }}
+                                    onMouseOut={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.color = '#334155'; }}
                                 >
-                                    {suggestion}
+                                    {reply}
                                 </button>
                             ))}
                         </div>
 
                         {/* Message Composer */}
-                        <form onSubmit={handleSendReply} className="p-4 border-t border-slate-200 bg-white">
-                            <div className="flex items-end gap-3">
+                        <form onSubmit={handleSendMessage} className="inmail-composer">
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                 <textarea
-                                    rows={2}
+                                    rows={3}
                                     value={replyText}
                                     onChange={(e) => setReplyText(e.target.value)}
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter' && !e.shiftKey) {
                                             e.preventDefault();
-                                            handleSendReply();
+                                            handleSendMessage();
                                         }
                                     }}
-                                    placeholder="Write your reply... (Press Enter to send, Shift+Enter for newline)"
-                                    className="flex-1 px-3.5 py-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 bg-white resize-none"
+                                    placeholder={`Write a reply to ${activeThread.otherUserName}... (Press Enter to send)`}
+                                    style={{
+                                        width: '100%',
+                                        padding: '0.75rem 1rem',
+                                        fontSize: '0.875rem',
+                                        border: '1px solid #cbd5e1',
+                                        borderRadius: 'var(--radius-md)',
+                                        outline: 'none',
+                                        fontFamily: 'inherit',
+                                        resize: 'none',
+                                        transition: 'border-color var(--transition-fast)',
+                                    }}
+                                    onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; }}
+                                    onBlur={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; }}
                                 />
-                                <button
-                                    type="submit"
-                                    disabled={sending || !replyText.trim()}
-                                    className="px-5 py-2.5 text-xs font-bold bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-colors flex items-center gap-1.5 h-10"
-                                >
-                                    {sending ? 'Sending...' : 'Send'}
-                                </button>
+
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <button
+                                            type="button"
+                                            title="Attach File / Resume"
+                                            style={{ border: 'none', background: 'transparent', padding: '0.4rem', cursor: 'pointer', color: 'var(--text-muted)' }}
+                                            onClick={() => alert('Resume attachment enabled')}
+                                        >
+                                            <Paperclip size={17} />
+                                        </button>
+                                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                                            Shift + Enter for new line
+                                        </span>
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        disabled={!replyText.trim() || sending}
+                                        className="btn btn-primary"
+                                        style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '0.45rem',
+                                            padding: '0.55rem 1.35rem',
+                                            fontSize: '0.85rem',
+                                            fontWeight: 700,
+                                            opacity: !replyText.trim() || sending ? 0.6 : 1,
+                                        }}
+                                    >
+                                        <span>{sending ? 'Sending...' : 'Send InMail'}</span>
+                                        <Send size={15} />
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </div>
                 ) : (
-                    <div className="flex-1 flex items-center justify-center p-8 text-center bg-slate-50/30">
-                        <div>
-                            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-3xl mx-auto mb-3">
-                                ✉️
-                            </div>
-                            <h3 className="text-base font-bold text-slate-800">Select a conversation</h3>
-                            <p className="text-xs text-slate-500 mt-1 max-w-sm">
-                                Choose a thread from the left panel to read and respond to direct recruiter inquiries.
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', color: 'var(--text-secondary)' }}>
+                        <div style={{ textAlign: 'center' }}>
+                            <MessageSquare size={48} color="#cbd5e1" style={{ margin: '0 auto 1rem auto' }} />
+                            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>Select a Conversation</h3>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>
+                                Choose a thread on the left to review messages and reply.
                             </p>
                         </div>
                     </div>

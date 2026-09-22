@@ -73,7 +73,9 @@ public class SecurityConfig {
                 .requestMatchers(org.springframework.http.HttpMethod.GET, 
                     "/api/v1/jobs", "/api/v1/jobs/**", 
                     "/api/v1/companies", "/api/v1/companies/**",
-                    "/api/v1/assessments", "/api/v1/assessments/**"
+                    "/api/v1/assessments", "/api/v1/assessments/**",
+                    "/api/v1/marketplace/jobs", "/api/v1/marketplace/jobs/**",
+                    "/api/v1/marketplace/sources", "/api/v1/marketplace/stats"
                 ).permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.POST,
                     "/api/v1/ai/semantic/jobs",

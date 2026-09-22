@@ -11,7 +11,11 @@ export const CandidateLayout = () => {
     if (location.pathname.includes('/profile')) return 'Candidate Profile';
     if (location.pathname.includes('/applications')) return 'My Applications';
     if (location.pathname.includes('/saved-jobs')) return 'Saved Jobs';
-    if (location.pathname.includes('/ai-tools')) return 'AI Career Studio';
+    if (location.pathname.includes('/ai-tools') || location.pathname.includes('/ai')) return 'AI Career Studio';
+    if (location.pathname.includes('/assessments')) return 'Skill Assessments';
+    if (location.pathname.includes('/interviews')) return 'My Interviews';
+    if (location.pathname.includes('/messages')) return 'Messages & InMail';
+    if (location.pathname.includes('/notifications')) return 'Notifications';
     return 'Candidate Dashboard';
   };
 

@@ -11,11 +11,16 @@ import {
   FileText,
   RefreshCw,
   CheckCircle,
+  Globe,
+  Database,
+  Play,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import userService from '../../services/userService';
 import recruiterService from '../../services/recruiterService';
 import jobService from '../../services/jobService';
+import marketplaceService from '../../services/marketplaceService';
+import MarketplaceStatsCard from '../../components/jobs/MarketplaceStatsCard';
 
 export const AdminDashboardPage = () => {
   const [stats, setStats] = useState({
@@ -25,10 +30,33 @@ export const AdminDashboardPage = () => {
     uptime: '99.98%',
   });
   const [loading, setLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncFeedback, setSyncFeedback] = useState(null);
 
   useEffect(() => {
     loadDashboardMetrics();
   }, []);
+
+  const handleTriggerManualSync = async (sourceType = 'ALL') => {
+    setIsSyncing(true);
+    setSyncFeedback(null);
+    try {
+      const res = await marketplaceService.triggerManualSync(sourceType);
+      setSyncFeedback({
+        type: 'success',
+        message: res?.message || `Sync triggered successfully for ${sourceType}!`,
+      });
+      loadDashboardMetrics();
+    } catch (err) {
+      setSyncFeedback({
+        type: 'error',
+        message: err?.response?.data?.message || err.message || 'Sync trigger notice — scheduled in background',
+      });
+    } finally {
+      setIsSyncing(false);
+      setTimeout(() => setSyncFeedback(null), 6000);
+    }
+  };
 
   const loadDashboardMetrics = async () => {
     setLoading(true);
@@ -129,10 +157,81 @@ export const AdminDashboardPage = () => {
         </div>
       </div>
 
+      {/* Sync Feedback Toast */}
+      {syncFeedback && (
+        <div
+          style={{
+            padding: '0.85rem 1.25rem',
+            borderRadius: 'var(--radius-md)',
+            background: syncFeedback.type === 'success' ? '#ecfdf5' : '#fff1f2',
+            border: `1px solid ${syncFeedback.type === 'success' ? '#a7f3d0' : '#fecdd3'}`,
+            color: syncFeedback.type === 'success' ? '#065f46' : '#9f1239',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: '0.9rem',
+            fontWeight: 500,
+          }}
+        >
+          <span>{syncFeedback.message}</span>
+          <button
+            onClick={() => setSyncFeedback(null)}
+            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'inherit', fontWeight: 700 }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Real-time Job Aggregation & Marketplace Health */}
+      <MarketplaceStatsCard />
+
       {/* Primary Governance Modules */}
       <div>
         <h2 style={{ fontSize: '1.35rem', marginBottom: '1rem' }}>Platform Governance Modules</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Job Aggregation Engine Card */}
+          <div className="card" style={{ borderColor: 'rgba(14, 165, 233, 0.3)', background: 'linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+              <h3 style={{ fontSize: '1.2rem', margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#0369a1' }}>
+                <Globe size={18} color="#0ea5e9" /> Multi-Source Aggregator
+              </h3>
+              <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '0.15rem 0.45rem', borderRadius: '4px', background: '#e0f2fe', color: '#0284c7' }}>
+                Cron 6h
+              </span>
+            </div>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
+              Automated ingestion from Adzuna, Greenhouse, and Lever with normalization and AI deduplication.
+            </p>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => handleTriggerManualSync('ALL')}
+                disabled={isSyncing}
+                className="btn btn-primary btn-sm"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: '#0284c7' }}
+              >
+                <Play size={13} className={isSyncing ? 'spin' : ''} />
+                <span>{isSyncing ? 'Syncing...' : 'Trigger All'}</span>
+              </button>
+              <button
+                onClick={() => handleTriggerManualSync('ADZUNA')}
+                disabled={isSyncing}
+                className="btn btn-secondary btn-sm"
+                style={{ fontSize: '0.75rem', padding: '0.35rem 0.6rem' }}
+              >
+                Adzuna
+              </button>
+              <button
+                onClick={() => handleTriggerManualSync('GREENHOUSE')}
+                disabled={isSyncing}
+                className="btn btn-secondary btn-sm"
+                style={{ fontSize: '0.75rem', padding: '0.35rem 0.6rem' }}
+              >
+                Greenhouse
+              </button>
+            </div>
+          </div>
+
           <div className="card">
             <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <Users size={18} color="var(--primary-400)" /> User & Role Governance

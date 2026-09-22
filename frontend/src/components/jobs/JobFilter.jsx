@@ -33,6 +33,7 @@ export const JobFilter = ({ filters, onChange, onReset, isSemanticMode, onToggle
     filters.employmentType,
     filters.experienceLevel,
     filters.minSalary,
+    filters.sourceType,
     (filters.skills && filters.skills.length > 0) ? true : false,
   ].filter(Boolean).length;
 
@@ -103,6 +104,42 @@ export const JobFilter = ({ filters, onChange, onReset, isSemanticMode, onToggle
             </button>
           )}
         </div>
+      </div>
+
+      {/* Aggregated Source Pills Selector */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '1.15rem', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginRight: '0.2rem' }}>
+          Job Source:
+        </span>
+        {[
+          { key: '', label: 'All Marketplace' },
+          { key: 'INTERNAL', label: 'HireHub Direct' },
+          { key: 'ADZUNA', label: 'Adzuna' },
+          { key: 'GREENHOUSE', label: 'Greenhouse' },
+          { key: 'LEVER', label: 'Lever' },
+        ].map((src) => {
+          const isSelected = (filters.sourceType || '') === src.key;
+          return (
+            <button
+              key={src.key}
+              type="button"
+              onClick={() => handleChange('sourceType', src.key)}
+              style={{
+                fontSize: '0.75rem',
+                fontWeight: isSelected ? 700 : 500,
+                padding: '0.2rem 0.65rem',
+                borderRadius: 'var(--radius-full)',
+                border: isSelected ? '1px solid var(--color-primary)' : '1px solid #e2e8f0',
+                background: isSelected ? '#e8f3fc' : '#f8fafc',
+                color: isSelected ? 'var(--color-primary)' : '#475569',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              {src.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Primary Google/LinkedIn-like Search Row */}

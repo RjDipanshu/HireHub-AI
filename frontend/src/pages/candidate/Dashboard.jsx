@@ -27,6 +27,8 @@ import {
 import applicationService from '../../services/applicationService';
 import jobService from '../../services/jobService';
 import interviewService from '../../services/interviewService';
+import marketplaceService from '../../services/marketplaceService';
+import JobSourceBadge from '../../components/jobs/JobSourceBadge';
 import ApplicationStatusBadge from '../../components/applications/ApplicationStatusBadge';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import CandidateAnalytics from '../../components/candidate/CandidateAnalytics';
@@ -42,6 +44,7 @@ export const Dashboard = () => {
   const [interviews, setInterviews] = useState([]);
   const [appliedJobIds, setAppliedJobIds] = useState(new Set());
   const [bookmarkedIds, setBookmarkedIds] = useState(new Set([1, 3]));
+  const [marketplaceJobs, setMarketplaceJobs] = useState([]);
   const [notificationMsg, setNotificationMsg] = useState(null);
 
   // Referral System State
@@ -179,10 +182,11 @@ export const Dashboard = () => {
     const loadDashboardData = async () => {
       setLoading(true);
       try {
-        const [apps, saved, ints] = await Promise.allSettled([
+        const [apps, saved, ints, marketplace] = await Promise.allSettled([
           applicationService.getMyApplications(),
           jobService.getMySavedJobs(),
           interviewService.getCandidateInterviews(),
+          marketplaceService.getRecommendedJobs(6),
         ]);
 
         if (apps.status === 'fulfilled' && Array.isArray(apps.value) && apps.value.length > 0) {
@@ -204,6 +208,10 @@ export const Dashboard = () => {
         } else {
           setInterviews(defaultInterviews);
         }
+
+        if (marketplace.status === 'fulfilled' && Array.isArray(marketplace.value) && marketplace.value.length > 0) {
+          setMarketplaceJobs(marketplace.value);
+        }
       } catch (err) {
         console.warn('[Dashboard] Data fetch notice, falling back to showcase state:', err);
         setApplications(defaultApplications);
@@ -217,25 +225,53 @@ export const Dashboard = () => {
     loadDashboardData();
   }, []);
 
-  const handleQuickApply = (job) => {
-    setAppliedJobIds((prev) => new Set([...prev, job.id]));
-    setNotificationMsg(`Application successfully submitted for ${job.title} at ${job.company}!`);
+  const handleQuickApply = async (job) => {
+    try {
+      await applicationService.applyForJob({ jobId: job.id });
+      setAppliedJobIds((prev) => new Set([...prev, job.id]));
+      setNotificationMsg(`Application successfully submitted for ${job.title} at ${job.companyName || job.company}!`);
+    } catch (err) {
+      setAppliedJobIds((prev) => new Set([...prev, job.id]));
+      setNotificationMsg(err?.message || `Application recorded for ${job.title}!`);
+    }
     setTimeout(() => setNotificationMsg(null), 4000);
   };
 
-  const toggleSaveJob = (jobId) => {
-    setBookmarkedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(jobId)) {
-        next.delete(jobId);
+  const handleExternalApplyFromDashboard = async (job) => {
+    try {
+      await applicationService.applyExternalJob(job.id);
+    } catch (err) {
+      console.warn('Dashboard external tracking notice:', err);
+    }
+    const targetUrl = job.applicationUrl || job.externalApplyUrl || job.externalUrl;
+    if (targetUrl) {
+      window.open(targetUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const toggleSaveJob = async (jobId) => {
+    const isSaved = bookmarkedIds.has(jobId);
+    try {
+      if (isSaved) {
+        await jobService.unsaveJob(jobId);
         setNotificationMsg('Position removed from saved jobs');
       } else {
-        next.add(jobId);
+        await jobService.saveJob(jobId);
         setNotificationMsg('Position saved to your bookmarks');
       }
-      setTimeout(() => setNotificationMsg(null), 3000);
+    } catch (err) {
+      console.debug('Bookmark toggle notice:', err);
+    }
+    setBookmarkedIds((prev) => {
+      const next = new Set(prev);
+      if (isSaved) {
+        next.delete(jobId);
+      } else {
+        next.add(jobId);
+      }
       return next;
     });
+    setTimeout(() => setNotificationMsg(null), 3000);
   };
 
   // Candidate Name extraction
@@ -839,9 +875,45 @@ export const Dashboard = () => {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {defaultRecommendedJobs.map((job) => {
+          {(marketplaceJobs.length > 0 ? marketplaceJobs : defaultRecommendedJobs).map((job) => {
+            const isMarketplace = !!job.sourceType;
+            const isExternal = isMarketplace && job.sourceType !== 'INTERNAL';
             const isApplied = appliedJobIds.has(job.id);
             const isBookmarked = bookmarkedIds.has(job.id);
+            const displayCompany = isMarketplace ? job.companyName : job.company;
+            const displayLocation = job.location || 'Location Not Specified';
+            const displaySkills = isMarketplace ? (job.skills || []) : (job.tags || []);
+            const displayMatchScore = isMarketplace ? job.matchScore : job.matchScore;
+
+            // Format salary display
+            const formatSalary = () => {
+              if (!isMarketplace) return job.salary;
+              if (!job.minSalary) return null;
+              const currency = job.currency === 'INR' ? '₹' : job.currency === 'USD' ? '$' : job.currency || '₹';
+              const formatNum = (n) => {
+                if (n >= 10000000) return `${(n / 10000000).toFixed(1)} Cr`;
+                if (n >= 100000) return `${(n / 100000).toFixed(0)} LPA`;
+                return n.toLocaleString();
+              };
+              if (job.maxSalary) return `${currency}${formatNum(job.minSalary)} - ${currency}${formatNum(job.maxSalary)}`;
+              return `${currency}${formatNum(job.minSalary)}`;
+            };
+
+            // Generate company logo color from name
+            const logoColors = [
+              'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+              'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)',
+              'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+              'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+              'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+            ];
+            const logoColor = isMarketplace
+              ? logoColors[(displayCompany || '').charCodeAt(0) % logoColors.length]
+              : job.logoColor;
+            const logoLetter = isMarketplace
+              ? (displayCompany || 'C').substring(0, 2).toUpperCase()
+              : job.logoLetter;
 
             return (
               <div
@@ -868,7 +940,7 @@ export const Dashboard = () => {
                       width: '48px',
                       height: '48px',
                       borderRadius: '10px',
-                      background: job.logoColor,
+                      background: logoColor,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -878,7 +950,7 @@ export const Dashboard = () => {
                       flexShrink: 0,
                     }}
                   >
-                    {job.logoLetter}
+                    {logoLetter}
                   </div>
 
                   <div>
@@ -893,16 +965,19 @@ export const Dashboard = () => {
                       >
                         {job.title}
                       </h4>
-                      <span
-                        className="badge badge-ai"
-                        style={{
-                          fontSize: '0.72rem',
-                          padding: '0.2rem 0.5rem',
-                          fontWeight: 700,
-                        }}
-                      >
-                        {job.matchScore}% AI Match
-                      </span>
+                      {displayMatchScore && (
+                        <span
+                          className="badge badge-ai"
+                          style={{
+                            fontSize: '0.72rem',
+                            padding: '0.2rem 0.5rem',
+                            fontWeight: 700,
+                          }}
+                        >
+                          {displayMatchScore}% AI Match
+                        </span>
+                      )}
+                      {isMarketplace && <JobSourceBadge sourceType={job.sourceType} size="xs" />}
                     </div>
 
                     <div
@@ -917,21 +992,25 @@ export const Dashboard = () => {
                       }}
                     >
                       <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#334155', fontWeight: 600 }}>
-                        <Building2 size={14} /> {job.company}
+                        <Building2 size={14} /> {displayCompany}
                       </span>
                       <span>·</span>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        <MapPin size={14} /> {job.location}
+                        <MapPin size={14} /> {displayLocation}
                       </span>
-                      <span>·</span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#057642', fontWeight: 600 }}>
-                        <IndianRupee size={14} /> {job.salary}
-                      </span>
+                      {formatSalary() && (
+                        <>
+                          <span>·</span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#057642', fontWeight: 600 }}>
+                            <IndianRupee size={14} /> {formatSalary()}
+                          </span>
+                        </>
+                      )}
                     </div>
 
                     {/* Skill Tags */}
                     <div style={{ display: 'flex', gap: '0.45rem', marginTop: '0.65rem', flexWrap: 'wrap' }}>
-                      {job.tags.map((tag) => (
+                      {displaySkills.slice(0, 6).map((tag) => (
                         <span
                           key={tag}
                           style={{
@@ -967,30 +1046,43 @@ export const Dashboard = () => {
                     <Bookmark size={16} fill={isBookmarked ? '#f59e0b' : 'none'} />
                   </button>
 
-                  <Link
-                    to={`/jobs/${job.id}`}
-                    className="btn btn-secondary btn-sm"
-                    style={{ padding: '0.55rem 1rem', fontWeight: 600 }}
-                  >
-                    View Details
-                  </Link>
+                  {isExternal ? (
+                    <button
+                      type="button"
+                      onClick={() => handleExternalApplyFromDashboard(job)}
+                      className="btn btn-ai btn-sm"
+                      style={{ padding: '0.55rem 1.15rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                    >
+                      <ExternalLink size={14} /> Apply on Site
+                    </button>
+                  ) : (
+                    <>
+                      <Link
+                        to={`/jobs/${job.id}`}
+                        className="btn btn-secondary btn-sm"
+                        style={{ padding: '0.55rem 1rem', fontWeight: 600 }}
+                      >
+                        View Details
+                      </Link>
 
-                  <button
-                    onClick={() => handleQuickApply(job)}
-                    disabled={isApplied}
-                    className={isApplied ? 'btn btn-success btn-sm' : 'btn btn-ai btn-sm'}
-                    style={{ padding: '0.55rem 1.15rem', fontWeight: 600 }}
-                  >
-                    {isApplied ? (
-                      <>
-                        <CheckCircle2 size={16} /> Applied
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles size={16} /> 1-Click Apply
-                      </>
-                    )}
-                  </button>
+                      <button
+                        onClick={() => handleQuickApply(job)}
+                        disabled={isApplied}
+                        className={isApplied ? 'btn btn-success btn-sm' : 'btn btn-ai btn-sm'}
+                        style={{ padding: '0.55rem 1.15rem', fontWeight: 600 }}
+                      >
+                        {isApplied ? (
+                          <>
+                            <CheckCircle2 size={16} /> Applied
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles size={16} /> 1-Click Apply
+                          </>
+                        )}
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             );

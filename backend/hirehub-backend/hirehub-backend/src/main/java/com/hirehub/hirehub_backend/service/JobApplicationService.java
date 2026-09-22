@@ -9,6 +9,7 @@ import com.hirehub.hirehub_backend.entity.JobApplication;
 import com.hirehub.hirehub_backend.entity.RecruiterProfile;
 import com.hirehub.hirehub_backend.entity.Resume;
 import com.hirehub.hirehub_backend.entity.User;
+import com.hirehub.hirehub_backend.enums.ApplicationSource;
 import com.hirehub.hirehub_backend.enums.ApplicationStatus;
 import com.hirehub.hirehub_backend.enums.JobStatus;
 import com.hirehub.hirehub_backend.enums.RoleType;
@@ -53,6 +54,11 @@ public class JobApplicationService {
         Job job = jobRepository.findByIdAndIsDeletedFalse(dto.getJobId())
                 .orElseThrow(() -> new RuntimeException("Job not found with ID: " + dto.getJobId()));
 
+        // If job is external ATS job, track redirection application
+        if (job.isExternal()) {
+            return trackExternalApplication(candidateSupabaseUserId, job.getId());
+        }
+
         // Guardrails: Job must be ACTIVE
         if (job.getStatus() != JobStatus.ACTIVE) {
             throw new RuntimeException("Cannot apply to a job that is not active (current status: " + job.getStatus() + ")");
@@ -83,7 +89,9 @@ public class JobApplicationService {
         application.setJob(job);
         application.setCandidate(candidate);
         application.setResume(resume);
+        application.setApplicationSource(ApplicationSource.HIREHUB);
         application.setStatus(ApplicationStatus.APPLIED);
+        application.setAppliedAt(java.time.LocalDateTime.now());
         application.setCoverLetter(dto.getCoverLetter());
         if (dto.getScreeningAnswers() != null && !dto.getScreeningAnswers().isEmpty()) {
             try {
@@ -96,7 +104,7 @@ public class JobApplicationService {
 
         // Phase 11.2 & 11.4: In-App Notifications and Email Triggers
         try {
-            String companyName = job.getCompany() != null ? job.getCompany().getName() : "Partner Employer";
+            String companyName = job.getEffectiveCompanyName();
             String candidateName = (candidate.getUser() != null && candidate.getUser().getFirstName() != null ? candidate.getUser().getFirstName() + " " + (candidate.getUser().getLastName() != null ? candidate.getUser().getLastName() : "") : "Candidate").trim();
 
             if (candidate.getUser() != null) {
@@ -138,6 +146,55 @@ public class JobApplicationService {
         return convertToDTO(saved);
     }
 
+    @Transactional
+    public JobApplicationResponseDTO trackExternalApplication(UUID candidateSupabaseUserId, UUID jobId) {
+        CandidateProfile candidate = candidateProfileRepository.findByUserSupabaseUserIdAndIsDeletedFalse(candidateSupabaseUserId)
+                .orElseThrow(() -> new RuntimeException("Candidate profile not found for user: " + candidateSupabaseUserId));
+
+        Job job = jobRepository.findByIdAndIsDeletedFalse(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found with ID: " + jobId));
+
+        // If candidate already tracked this job application, update timestamp and return
+        JobApplication existing = jobApplicationRepository.findByJobIdAndCandidateIdAndIsDeletedFalse(job.getId(), candidate.getId())
+                .orElse(null);
+
+        if (existing != null) {
+            existing.setAppliedAt(java.time.LocalDateTime.now());
+            if (job.getExternalUrl() != null) {
+                existing.setApplicationUrl(job.getExternalUrl());
+            }
+            JobApplication saved = jobApplicationRepository.save(existing);
+            return convertToDTO(saved);
+        }
+
+        JobApplication application = new JobApplication();
+        application.setJob(job);
+        application.setCandidate(candidate);
+        application.setApplicationSource(ApplicationSource.EXTERNAL);
+        application.setStatus(ApplicationStatus.REDIRECTED);
+        application.setExternalJobId(job.getExternalJobId());
+        application.setApplicationUrl(job.getExternalUrl());
+        application.setAppliedAt(java.time.LocalDateTime.now());
+        application.setIsDeleted(false);
+
+        JobApplication saved = jobApplicationRepository.save(application);
+
+        try {
+            if (candidate.getUser() != null) {
+                String compName = job.getEffectiveCompanyName();
+                notificationService.createNotification(
+                        candidate.getUser(),
+                        "External Application: " + job.getTitle(),
+                        "You were redirected to complete your application for " + job.getTitle() + " at " + compName + ".",
+                        NotificationType.APPLICATION_RECEIVED,
+                        "/candidate/applications"
+                );
+            }
+        } catch (Exception ignored) {}
+
+        return convertToDTO(saved);
+    }
+
     public List<JobApplicationResponseDTO> getCandidateApplications(UUID candidateSupabaseUserId) {
         CandidateProfile candidate = candidateProfileRepository.findByUserSupabaseUserIdAndIsDeletedFalse(candidateSupabaseUserId)
                 .orElseThrow(() -> new RuntimeException("Candidate profile not found"));
@@ -154,8 +211,8 @@ public class JobApplicationService {
                 .orElseThrow(() -> new RuntimeException("Recruiter profile not found"));
 
         // Verify recruiter owns job or is in same company
-        if (!job.getRecruiter().getId().equals(recruiter.getId()) &&
-                (recruiter.getCompany() == null || !job.getCompany().getId().equals(recruiter.getCompany().getId()))) {
+        if (job.getRecruiter() == null || (!job.getRecruiter().getId().equals(recruiter.getId()) &&
+                (recruiter.getCompany() == null || job.getCompany() == null || !job.getCompany().getId().equals(recruiter.getCompany().getId())))) {
             throw new RuntimeException("You are not authorized to view applications for this job");
         }
 
@@ -236,8 +293,8 @@ public class JobApplicationService {
                 .orElseThrow(() -> new RuntimeException("Recruiter profile not found"));
 
         Job job = application.getJob();
-        if (!job.getRecruiter().getId().equals(recruiter.getId()) &&
-                (recruiter.getCompany() == null || !job.getCompany().getId().equals(recruiter.getCompany().getId()))) {
+        if (job.getRecruiter() == null || (!job.getRecruiter().getId().equals(recruiter.getId()) &&
+                (recruiter.getCompany() == null || job.getCompany() == null || !job.getCompany().getId().equals(recruiter.getCompany().getId())))) {
             throw new RuntimeException("You are not authorized to update applications for this job");
         }
 
@@ -256,7 +313,7 @@ public class JobApplicationService {
             alertNotificationService.triggerApplicationStatusAlert(updated, dto.getStatus().name());
             CandidateProfile candidate = application.getCandidate();
             if (candidate != null && candidate.getUser() != null) {
-                String companyName = job.getCompany() != null ? job.getCompany().getName() : "Partner Employer";
+                String companyName = job.getEffectiveCompanyName();
                 String candidateName = (candidate.getUser() != null && candidate.getUser().getFirstName() != null ? candidate.getUser().getFirstName() : "Candidate").trim();
                 String statusTitle = "Application Update: " + dto.getStatus();
                 String statusMsg = "Your application for " + job.getTitle() + " at " + companyName + " is now " + dto.getStatus() + ".";
@@ -323,8 +380,8 @@ public class JobApplicationService {
         String resumeUrl = resume != null ? resume.getFileUrl() : null;
         Double atsScore = resume != null ? resume.getAtsScore() : null;
 
-        String compName = job.getCompany() != null ? job.getCompany().getName() : null;
-        String compLogo = job.getCompany() != null ? job.getCompany().getLogoUrl() : null;
+        String compName = job != null ? job.getEffectiveCompanyName() : null;
+        String compLogo = (job != null && job.getCompany() != null) ? job.getCompany().getLogoUrl() : null;
 
         java.util.Map<String, String> screeningAnswers = new java.util.HashMap<>();
         if (app.getScreeningAnswersJson() != null && !app.getScreeningAnswersJson().isBlank()) {
@@ -336,32 +393,45 @@ public class JobApplicationService {
             } catch (Exception ignored) {}
         }
 
+        UUID candId = candidate != null ? candidate.getId() : null;
+        UUID candUserId = (candidate != null && candidate.getUser() != null) ? candidate.getUser().getId() : null;
+        String firstName = (candidate != null && candidate.getUser() != null) ? candidate.getUser().getFirstName() : null;
+        String lastName = (candidate != null && candidate.getUser() != null) ? candidate.getUser().getLastName() : null;
+        String email = (candidate != null && candidate.getUser() != null) ? candidate.getUser().getEmail() : null;
+        String phone = (candidate != null && candidate.getUser() != null) ? candidate.getUser().getPhone() : null;
+        String headline = candidate != null ? candidate.getHeadline() : null;
+        String profileImg = (candidate != null && candidate.getUser() != null) ? candidate.getUser().getProfileImageUrl() : null;
+
         return new JobApplicationResponseDTO(
                 app.getId(),
-                job.getId(),
-                job.getTitle(),
+                job != null ? job.getId() : null,
+                job != null ? job.getTitle() : null,
                 compName,
                 compLogo,
-                job.getLocation(),
-                job.getWorkMode(),
-                job.getEmploymentType(),
-                candidate.getId(),
-                candidate.getUser().getId(),
-                candidate.getUser().getFirstName(),
-                candidate.getUser().getLastName(),
-                candidate.getUser().getEmail(),
-                candidate.getUser().getPhone(),
-                candidate.getHeadline(),
-                candidate.getUser().getProfileImageUrl(),
+                job != null ? job.getLocation() : null,
+                job != null ? job.getWorkMode() : null,
+                job != null ? job.getEmploymentType() : null,
+                candId,
+                candUserId,
+                firstName,
+                lastName,
+                email,
+                phone,
+                headline,
+                profileImg,
                 resumeId,
                 resumeUrl,
                 atsScore,
                 app.getStatus(),
+                app.getApplicationSource(),
+                app.getExternalJobId(),
+                app.getApplicationUrl(),
                 app.getCoverLetter(),
                 app.getFeedback(),
                 app.getRejectionReason(),
                 screeningAnswers,
                 app.getViewedByRecruiterAt(),
+                app.getAppliedAt() != null ? app.getAppliedAt() : app.getCreatedAt(),
                 app.getCreatedAt(),
                 app.getUpdatedAt()
         );

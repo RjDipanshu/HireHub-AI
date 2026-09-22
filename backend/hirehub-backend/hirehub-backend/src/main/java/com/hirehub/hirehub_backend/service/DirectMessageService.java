@@ -121,7 +121,7 @@ public class DirectMessageService {
             String roleName = (otherUser.getRole() != null) ? otherUser.getRole().getName().name() : "USER";
 
             threads.add(DirectMessageThreadDTO.builder()
-                    .otherUserId(otherUser.getId())
+                    .otherUserId(otherUserId)
                     .otherUserName((otherUser.getFirstName() + " " + otherUser.getLastName()).trim())
                     .otherUserEmail(otherUser.getEmail())
                     .otherUserProfileImage(otherUser.getProfileImageUrl())

@@ -2,7 +2,6 @@ package com.hirehub.hirehub_backend.service;
 
 import com.hirehub.hirehub_backend.entity.EmailLog;
 import com.hirehub.hirehub_backend.enums.EmailStatus;
-import com.hirehub.hirehub_backend.enums.EmailType;
 import com.hirehub.hirehub_backend.repository.EmailLogRepository;
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
@@ -10,7 +9,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.MailSendException;

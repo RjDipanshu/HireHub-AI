@@ -2,7 +2,6 @@ package com.hirehub.hirehub_backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hirehub.hirehub_backend.dto.UserRequestDTO;
-import com.hirehub.hirehub_backend.dto.UserResponseDTO;
 import com.hirehub.hirehub_backend.dto.candidate.CandidateProfileRequestDTO;
 import com.hirehub.hirehub_backend.enums.RoleType;
 import com.hirehub.hirehub_backend.enums.UserStatus;

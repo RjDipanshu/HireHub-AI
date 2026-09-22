@@ -608,7 +608,7 @@ public class EmailNotificationService {
     
     @Async
     @Retryable(
-        value = { MailException.class, RuntimeException.class },
+        retryFor = { MailException.class, RuntimeException.class },
         maxAttemptsExpression = "${app.mail.retry.max-attempts:3}",
         backoff = @Backoff(delayExpression = "${app.mail.retry.delay-ms:5000}")
     )

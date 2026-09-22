@@ -44,8 +44,8 @@ jobs:
       - name: Verify Production Vite Bundle
         run: npm run build
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://qbdcvnkomdzqfxevlhhj.supabase.co' }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.dummy' }}
+          VITE_SUPABASE_URL: ${{ secrets['VITE_SUPABASE_URL'] || 'https://qbdcvnkomdzqfxevlhhj.supabase.co' }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets['VITE_SUPABASE_ANON_KEY'] || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.dummy' }}
           VITE_API_BASE_URL: /api/v1
 
   # ===========================================================================
@@ -108,8 +108,8 @@ jobs:
           push: false
           tags: hirehub-frontend:latest
           build-args: |
-            VITE_SUPABASE_URL=https://qbdcvnkomdzqfxevlhhj.supabase.co
-            VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.dummy
+            VITE_SUPABASE_URL=${{ secrets['VITE_SUPABASE_URL'] }}
+            VITE_SUPABASE_ANON_KEY=${{ secrets['VITE_SUPABASE_ANON_KEY'] }}
             VITE_API_BASE_URL=/api/v1
 
       - name: Build Backend Docker Image (Spring Boot 3)
@@ -141,8 +141,8 @@ jobs:
 
       # Optional: Trigger webhook or cloud CLI deploy (e.g. Render / Railway / AWS / Cloud Run)
       - name: Trigger Webhook Deploy (if configured)
-        if: env.DEPLOY_WEBHOOK_URL != ''
         env:
-          DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+          DEPLOY_WEBHOOK_URL: ${{ secrets['DEPLOY_WEBHOOK_URL'] }}
+        if: env.DEPLOY_WEBHOOK_URL != ''
         run: |
           curl -X POST "$DEPLOY_WEBHOOK_URL"

@@ -11,7 +11,6 @@ import com.hirehub.hirehub_backend.exception.TicketCreationException;
 import com.hirehub.hirehub_backend.repository.SupportTicketRepository;
 import com.hirehub.hirehub_backend.repository.SupportTicketMessageRepository;
 import com.hirehub.hirehub_backend.repository.UserRepository;
-import com.hirehub.hirehub_backend.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,9 +21,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.Year;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
