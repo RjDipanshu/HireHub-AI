@@ -13,5 +13,6 @@ public enum SourceType {
     LEVER,
     INDEED,
     LINKEDIN,
+    WEBHOOK,
     OTHER
 }

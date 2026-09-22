@@ -80,7 +80,8 @@ public class SecurityConfig {
                 .requestMatchers(org.springframework.http.HttpMethod.POST,
                     "/api/v1/ai/semantic/jobs",
                     "/api/v1/alerts/**",
-                    "/api/v1/resumes/**"
+                    "/api/v1/resumes/**",
+                    "/api/v1/webhooks/**"
                 ).permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET,
                     "/api/v1/alerts/**"

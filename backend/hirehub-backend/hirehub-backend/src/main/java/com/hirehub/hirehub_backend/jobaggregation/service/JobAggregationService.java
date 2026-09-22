@@ -141,6 +141,79 @@ public class JobAggregationService {
         return run;
     }
 
+    /**
+     * Real-time push ingestion for webhook payloads and partner APIs.
+     */
+    @Transactional
+    public JobSyncRun ingestJobs(SourceType sourceType, List<ExternalJobDto> externalJobs) {
+        LocalDateTime startTime = LocalDateTime.now();
+        JobSyncRun run = JobSyncRun.builder()
+                .sourceType(sourceType != null ? sourceType : SourceType.WEBHOOK)
+                .status(SyncStatus.IN_PROGRESS)
+                .startedAt(startTime)
+                .jobsFound(externalJobs != null ? externalJobs.size() : 0)
+                .build();
+        run = syncRunRepository.save(run);
+
+        if (externalJobs == null || externalJobs.isEmpty()) {
+            run.setStatus(SyncStatus.SUCCESS);
+            run.setCompletedAt(LocalDateTime.now());
+            return syncRunRepository.save(run);
+        }
+
+        int imported = 0;
+        int updated = 0;
+        int skipped = 0;
+
+        for (ExternalJobDto raw : externalJobs) {
+            try {
+                if (raw.getSourceType() == null) {
+                    raw.setSourceType(sourceType != null ? sourceType : SourceType.WEBHOOK);
+                }
+
+                // 1. Mandatory lookup: UNIQUE(source_type, external_job_id)
+                Optional<Job> existingByExternalId = (raw.getExternalId() != null && !raw.getExternalId().isBlank())
+                        ? jobRepository.findBySourceTypeAndExternalJobIdAndIsDeletedFalse(raw.getSourceType(), raw.getExternalId())
+                        : Optional.empty();
+
+                if (existingByExternalId.isPresent()) {
+                    Job existing = existingByExternalId.get();
+                    updateExistingJob(existing, raw);
+                    jobRepository.save(existing);
+                    updated++;
+                    continue;
+                }
+
+                // 2. Cross-provider content fingerprint deduplication
+                String dedupHash = deduplicationService.generateFingerprint(
+                        raw.getTitle(), raw.getCompanyName(), raw.getLocation());
+                Optional<Job> existingByHash = jobRepository.findByDedupHashAndIsDeletedFalse(dedupHash);
+                if (existingByHash.isPresent()) {
+                    skipped++;
+                    continue;
+                }
+
+                // 3. INSERT
+                Job newJob = buildJobEntity(raw, dedupHash);
+                jobRepository.save(newJob);
+                imported++;
+
+            } catch (Exception e) {
+                log.warn("[JobAggregationService] Webhook job error {}: {}", raw.getExternalId(), e.getMessage());
+                skipped++;
+            }
+        }
+
+        LocalDateTime endTime = LocalDateTime.now();
+        run.setStatus(SyncStatus.SUCCESS);
+        run.setJobsImported(imported);
+        run.setJobsUpdated(updated);
+        run.setJobsSkipped(skipped);
+        run.setCompletedAt(endTime);
+        run.setDurationMs(java.time.Duration.between(startTime, endTime).toMillis());
+        return syncRunRepository.save(run);
+    }
+
     private void updateExistingJob(Job existing, ExternalJobDto raw) {
         existing.setLastSyncedAt(LocalDateTime.now());
         existing.setStatus(JobStatus.ACTIVE);

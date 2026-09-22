@@ -61,6 +61,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
     }
 
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponseDTO> handleMaxUploadSizeExceededException(org.springframework.web.multipart.MaxUploadSizeExceededException ex) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(
+                new ErrorResponseDTO(
+                        HttpStatus.PAYLOAD_TOO_LARGE.value(),
+                        HttpStatus.PAYLOAD_TOO_LARGE.getReasonPhrase(),
+                        "The uploaded file exceeds the maximum allowed size (10MB). Please compress your PDF or upload a smaller file.",
+                        LocalDateTime.now()
+                )
+        );
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDTO> handleGenericException(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
