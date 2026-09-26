@@ -836,4 +836,197 @@
   background: #eff6ff;
 }
 
+/* ==========================================================================
+   Dark Mode Component Overrides — [data-theme="dark"]
+   ========================================================================== */
+
+[data-theme="dark"] .card,
+[data-theme="dark"] .card-ai,
+[data-theme="dark"] .assessment-card,
+[data-theme="dark"] .assessment-hero,
+[data-theme="dark"] .skeleton-card {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+
+[data-theme="dark"] .card:hover,
+[data-theme="dark"] .card-interactive:hover,
+[data-theme="dark"] .assessment-card:hover {
+  border-color: #475569;
+  background: var(--bg-card-hover);
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .btn-secondary {
+  background: #1e293b;
+  color: var(--text-primary);
+  border-color: #475569;
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+  background: #334155;
+  border-color: #64748b;
+}
+
+[data-theme="dark"] .btn-primary,
+[data-theme="dark"] .btn-ai {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .btn-outline {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+[data-theme="dark"] .btn-outline:hover {
+  background: rgba(77, 157, 224, 0.1);
+}
+
+[data-theme="dark"] .form-input,
+[data-theme="dark"] .form-select,
+[data-theme="dark"] .form-textarea {
+  background: #0f172a;
+  border-color: #475569;
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .form-input:focus,
+[data-theme="dark"] .form-select:focus,
+[data-theme="dark"] .form-textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(77, 157, 224, 0.2);
+  background: #0f172a;
+}
+
+[data-theme="dark"] .form-input::placeholder,
+[data-theme="dark"] .form-textarea::placeholder {
+  color: #64748b;
+}
+
+[data-theme="dark"] .badge-primary {
+  background: rgba(77, 157, 224, 0.15);
+  color: #7cc4fa;
+  border-color: rgba(77, 157, 224, 0.3);
+}
+
+[data-theme="dark"] .badge-ai {
+  background: #1e293b;
+  color: #94a3b8;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .sidebar {
+  background: #1e293b;
+  border-color: var(--border-subtle);
+}
+
+[data-theme="dark"] .sidebar-backdrop {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+[data-theme="dark"] .topbar {
+  background: rgba(15, 23, 42, 0.95);
+  border-color: var(--border-subtle);
+}
+
+[data-theme="dark"] .table th {
+  background: #1a2332;
+  color: #94a3b8;
+  border-color: var(--border-subtle);
+}
+
+[data-theme="dark"] .table td {
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+}
+
+[data-theme="dark"] .table tbody tr:hover {
+  background-color: #253349;
+}
+
+[data-theme="dark"] .modal-overlay {
+  background-color: rgba(0, 0, 0, 0.75);
+}
+
+[data-theme="dark"] .modal-content {
+  background: #1e293b;
+  border-color: var(--border-subtle);
+}
+
+[data-theme="dark"] .empty-state {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .empty-state-icon {
+  background: rgba(77, 157, 224, 0.1);
+}
+
+[data-theme="dark"] .skeleton {
+  background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+  background-size: 200% 100%;
+}
+
+[data-theme="dark"] .inmail-container,
+[data-theme="dark"] .inmail-sidebar,
+[data-theme="dark"] .inmail-sidebar-header,
+[data-theme="dark"] .inmail-composer,
+[data-theme="dark"] .inmail-chat-header {
+  background: #1e293b;
+  border-color: var(--border-subtle);
+}
+
+[data-theme="dark"] .inmail-chat {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .inmail-thread-item {
+  background: #1e293b;
+  border-color: #253349;
+}
+
+[data-theme="dark"] .inmail-thread-item:hover {
+  background: #253349;
+}
+
+[data-theme="dark"] .inmail-thread-item.active {
+  background: rgba(77, 157, 224, 0.08);
+}
+
+[data-theme="dark"] .inmail-bubble-in {
+  background: #253349;
+  border-color: #334155;
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .inmail-search-box {
+  background: #0f172a;
+  border-color: #475569;
+}
+
+[data-theme="dark"] .inmail-search-input {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .assessment-option-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .assessment-option-card:hover {
+  border-color: #475569;
+  background: #253349;
+}
+
+[data-theme="dark"] .assessment-option-card.selected {
+  border-color: var(--color-primary);
+  background: rgba(77, 157, 224, 0.08);
+}
+
+[data-theme="dark"] .assessment-icon-box {
+  background: rgba(77, 157, 224, 0.1);
+  border-color: rgba(77, 157, 224, 0.2);
+}
+
 

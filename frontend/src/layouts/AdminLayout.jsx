@@ -13,6 +13,7 @@ export const AdminLayout = () => {
     if (location.pathname.includes('/jobs')) return 'Job Moderation & Compliance';
     if (location.pathname.includes('/applications')) return 'Applications Audit Pipeline';
     if (location.pathname.includes('/broadcast')) return 'System Broadcast Center';
+    if (location.pathname.includes('/audit-logs')) return 'Enterprise Audit Trail & Compliance';
     if (location.pathname.includes('/analytics')) return 'System Telemetry & Analytics';
     if (location.pathname.includes('/support')) return 'Support Tickets & Helpdesk';
     if (location.pathname.includes('/api-test')) return 'API Diagnostics';

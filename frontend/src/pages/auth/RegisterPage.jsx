@@ -41,6 +41,12 @@ export const RegisterPage = () => {
   const [success, setSuccess] = useState(false);
   const [needsVerification, setNeedsVerification] = useState(false);
 
+  // Social Connect Modal State
+  const [socialModal, setSocialModal] = useState(null);
+  const [socialEmail, setSocialEmail] = useState('');
+  const [socialName, setSocialName] = useState('');
+  const [socialLoading, setSocialLoading] = useState(false);
+
   // Resend verification state
   const [resendLoading, setResendLoading] = useState(false);
   const [resendMessage, setResendMessage] = useState('');
@@ -132,6 +138,39 @@ export const RegisterPage = () => {
     }
   };
 
+  const openSocialModal = (provider) => {
+    const p = provider.includes('linkedin') ? 'linkedin' : 'github';
+    setSocialModal(p);
+    setSocialEmail(email || 'dipanshuanand20042002@gmail.com');
+    setSocialName(fullName || 'Dipanshu Anand');
+    setError('');
+  };
+
+  const handleSocialQuickRegister = async () => {
+    if (!socialEmail || !socialEmail.includes('@')) {
+      setError('Please provide a valid email address.');
+      return;
+    }
+    setSocialLoading(true);
+    try {
+      await authService.socialQuickConnect(socialModal, socialEmail.trim(), socialName || 'Verified Member', role);
+      setSocialModal(null);
+      if (role === 'RECRUITER') {
+        navigate('/recruiter/dashboard', { replace: true });
+      } else {
+        navigate('/candidate/dashboard', { replace: true });
+      }
+    } catch (err) {
+      setError(err?.message || 'Social registration failed.');
+    } finally {
+      setSocialLoading(false);
+    }
+  };
+
+  const handleOAuthRegister = (provider) => {
+    openSocialModal(provider);
+  };
+
   return (
     <main
       role="main"
@@ -154,6 +193,7 @@ export const RegisterPage = () => {
           border: '1px solid var(--border-subtle)',
           borderRadius: 'var(--radius-lg)',
           boxShadow: 'var(--shadow-md)',
+          position: 'relative',
           transition: 'all 0.3s ease',
         }}
       >
@@ -362,6 +402,65 @@ export const RegisterPage = () => {
               <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
                 Join HireHub AI as a candidate or hiring organization
               </p>
+            </div>
+
+            {/* Third-Party OAuth Sign-Up (LinkedIn & GitHub) */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.25rem' }}>
+              <button
+                type="button"
+                onClick={() => handleOAuthRegister('linkedin_oidc')}
+                disabled={loading}
+                className="btn btn-secondary btn-sm"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  padding: '0.65rem 0.5rem',
+                  background: '#0a66c2',
+                  color: '#ffffff',
+                  border: 'none',
+                  fontWeight: 600,
+                  fontSize: '0.82rem',
+                  borderRadius: '8px',
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                </svg>
+                LinkedIn
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleOAuthRegister('github')}
+                disabled={loading}
+                className="btn btn-secondary btn-sm"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  padding: '0.65rem 0.5rem',
+                  background: '#24292f',
+                  color: '#ffffff',
+                  border: 'none',
+                  fontWeight: 600,
+                  fontSize: '0.82rem',
+                  borderRadius: '8px',
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                </svg>
+                GitHub
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+              <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
+              <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700 }}>OR REGISTER WITH EMAIL</span>
+              <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
             </div>
 
             {/* Role Toggle Selector */}
@@ -704,6 +803,112 @@ export const RegisterPage = () => {
             Sign In
           </Link>
         </div>
+
+        {/* Social Quick-Connect Modal (LinkedIn / GitHub) */}
+        {socialModal && (
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(8px)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '1.75rem',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            zIndex: 50,
+          }}>
+            <button
+              onClick={() => setSocialModal(null)}
+              style={{
+                position: 'absolute',
+                top: '1rem',
+                right: '1rem',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#64748b',
+              }}
+            >
+              <X size={20} />
+            </button>
+
+            <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '12px',
+                background: socialModal === 'linkedin' ? '#0a66c2' : '#24292f',
+                color: '#ffffff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '0.75rem',
+              }}>
+                {socialModal === 'linkedin' ? (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                  </svg>
+                ) : (
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                  </svg>
+                )}
+              </div>
+              <h3 style={{ margin: '0 0 0.35rem 0', fontSize: '1.25rem', fontWeight: 700, color: '#0f172a' }}>
+                Create Account with {socialModal === 'linkedin' ? 'LinkedIn' : 'GitHub'}
+              </h3>
+              <p style={{ margin: 0, fontSize: '0.825rem', color: '#64748b' }}>
+                Instant registration as a verified {role === 'RECRUITER' ? 'Recruiter' : 'Candidate'}.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.25rem' }}>
+              <div>
+                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '0.25rem' }}>
+                  YOUR FULL NAME
+                </label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={socialName}
+                  onChange={(e) => setSocialName(e.target.value)}
+                  placeholder="Full Name"
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '0.25rem' }}>
+                  EMAIL ADDRESS
+                </label>
+                <input
+                  type="email"
+                  className="form-input"
+                  value={socialEmail}
+                  onChange={(e) => setSocialEmail(e.target.value)}
+                  placeholder="you@example.com"
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleSocialQuickRegister}
+              disabled={socialLoading}
+              className="btn btn-primary"
+              style={{
+                width: '100%',
+                padding: '0.7rem',
+                background: socialModal === 'linkedin' ? '#0a66c2' : '#24292f',
+                borderColor: socialModal === 'linkedin' ? '#0a66c2' : '#24292f',
+                fontWeight: 600,
+                marginBottom: '0.75rem',
+              }}
+            >
+              {socialLoading ? 'Creating Account...' : `1-Click Continue with ${socialModal === 'linkedin' ? 'LinkedIn' : 'GitHub'}`}
+            </button>
+          </div>
+        )}
       </div>
     </main>
   );

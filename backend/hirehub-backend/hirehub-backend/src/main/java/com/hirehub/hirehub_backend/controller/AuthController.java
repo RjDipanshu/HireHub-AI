@@ -50,4 +50,15 @@ public class AuthController {
         UUID supabaseUserId = UUID.fromString(jwt.getSubject());
         return ResponseEntity.ok(userService.getCurrentUser(supabaseUserId));
     }
+
+    @Operation(summary = "Update 2FA status", description = "Enables or disables Two-Factor Authentication for the user")
+    @PostMapping("/2fa/status")
+    public ResponseEntity<java.util.Map<String, Object>> updateTwoFactorStatus(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestBody java.util.Map<String, Object> payload) {
+        UUID supabaseUserId = UUID.fromString(jwt.getSubject());
+        boolean enabled = Boolean.TRUE.equals(payload.get("enabled"));
+        userService.updateTwoFactorStatus(supabaseUserId, enabled);
+        return ResponseEntity.ok(java.util.Map.of("status", "SUCCESS", "twoFactorEnabled", enabled));
+    }
 }

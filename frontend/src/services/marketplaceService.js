@@ -1,4 +1,5 @@
 import api from './api.js';
+import INDIAN_TECH_JOBS from '../data/mockJobs.js';
 
 /**
  * HireHub AI — Unified Job Marketplace API Service
@@ -34,9 +35,16 @@ export const marketplaceService = {
      * @param {string} [sourceType] - Optional source type hint for faster lookup
      */
     async getJobById(id, sourceType = null) {
-        const params = sourceType ? { sourceType } : {};
-        const response = await api.get(`/marketplace/jobs/${id}`, { params });
-        return response.data;
+        try {
+            const params = sourceType ? { sourceType } : {};
+            const response = await api.get(`/marketplace/jobs/${id}`, { params });
+            if (response.data) return response.data;
+        } catch (err) {
+            console.debug('[MarketplaceService] API getJobById fallback for ID:', id);
+        }
+        const match = INDIAN_TECH_JOBS.find((j) => String(j.id) === String(id));
+        if (match) return match;
+        return null;
     },
 
     /**

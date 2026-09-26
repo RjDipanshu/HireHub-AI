@@ -19,6 +19,7 @@ import {
   Award,
   MessageSquare,
   LifeBuoy,
+  Shield,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -32,7 +33,9 @@ export const Sidebar = ({ role = 'CANDIDATE', isOpen, onClose }) => {
     { to: '/candidate/messages', label: 'Messages / InMail', icon: MessageSquare },
     { to: '/candidate/applications', label: 'Applications', icon: FileText },
     { to: '/candidate/saved-jobs', label: 'Saved Jobs', icon: Bookmark },
+    { to: '/candidate/resume-builder', label: 'ATS Resume Studio', icon: FileText, badge: 'New' },
     { to: '/candidate/ai-tools', label: 'AI Career Studio', icon: Sparkles, badge: 'AI' },
+    { to: '/candidate/settings', label: 'Privacy & Security', icon: Shield, badge: '2FA' },
     { to: '/jobs', label: 'Explore Jobs', icon: Briefcase },
     { to: '/support', label: 'Help & Support', icon: LifeBuoy },
   ];
@@ -48,6 +51,7 @@ export const Sidebar = ({ role = 'CANDIDATE', isOpen, onClose }) => {
     { to: '/recruiter/ai-tools', label: 'Recruiter AI', icon: Sparkles, badge: 'AI' },
     { to: '/recruiter/company', label: 'Company Profile', icon: Building2 },
     { to: '/recruiter/profile', label: 'My Profile', icon: User },
+    { to: '/recruiter/settings', label: 'Privacy & Security', icon: Shield, badge: '2FA' },
     { to: '/support', label: 'Help & Support', icon: LifeBuoy },
   ];
 
@@ -57,6 +61,7 @@ export const Sidebar = ({ role = 'CANDIDATE', isOpen, onClose }) => {
     { to: '/admin/companies', label: 'Companies', icon: Building2 },
     { to: '/admin/jobs/moderation', label: 'Job Moderation', icon: Briefcase },
     { to: '/admin/applications', label: 'Applications', icon: FileText },
+    { to: '/admin/audit-logs', label: 'Audit Logs', icon: Shield, badge: 'SOC2' },
     { to: '/admin/broadcast', label: 'Broadcast Center', icon: Megaphone },
     { to: '/admin/analytics', label: 'System Analytics', icon: BarChart3 },
     { to: '/admin/support', label: 'Support Tickets', icon: LifeBuoy, badge: 'New' },

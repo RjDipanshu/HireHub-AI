@@ -47,6 +47,7 @@ const CandidateSavedJobsPage = lazy(() => import("../pages/candidate/CandidateSa
 const CandidateAiToolsPage = lazy(() => import("../pages/candidate/CandidateAiToolsPage"));
 const CandidateInterviewsPage = lazy(() => import("../pages/candidate/CandidateInterviewsPage"));
 const CandidateAssessmentsPage = lazy(() => import("../pages/candidate/CandidateAssessmentsPage"));
+const ResumeBuilderPage = lazy(() => import("../pages/candidate/ResumeBuilderPage"));
 
 // Recruiter Pages (Lazy-loaded chunks)
 const RecruiterDashboardPage = lazy(() => import("../pages/recruiter/RecruiterDashboardPage"));
@@ -68,11 +69,13 @@ const AdminApplicationsPage = lazy(() => import("../pages/admin/AdminApplication
 const AdminNotificationsPage = lazy(() => import("../pages/admin/AdminNotificationsPage"));
 const AdminAnalyticsPage = lazy(() => import("../pages/admin/AdminAnalyticsPage"));
 const AdminSupportPage = lazy(() => import("../pages/admin/AdminSupportPage"));
+const AdminAuditLogsPage = lazy(() => import("../pages/admin/AdminAuditLogsPage"));
 const ApiIntegrationTestPage = lazy(() => import("../pages/admin/ApiIntegrationTestPage"));
 
 // Shared Pages
 const NotificationsPage = lazy(() => import("../pages/common/NotificationsPage"));
 const MessagesPage = lazy(() => import("../pages/common/MessagesPage"));
+const PrivacySecurityPage = lazy(() => import("../pages/common/PrivacySecurityPage"));
 
 export function AppRouter() {
     const suspenseFallback = (
@@ -135,6 +138,8 @@ export function AppRouter() {
                         <Route path="notifications" element={<NotificationsPage />} />
                         <Route path="ai" element={<CandidateAiToolsPage />} />
                         <Route path="ai-tools" element={<CandidateAiToolsPage />} />
+                        <Route path="resume-builder" element={<ResumeBuilderPage />} />
+                        <Route path="settings" element={<PrivacySecurityPage />} />
                     </Route>
                 </Route>
 
@@ -156,6 +161,7 @@ export function AppRouter() {
                         <Route path="notifications" element={<NotificationsPage />} />
                         <Route path="ai" element={<RecruiterAiToolsPage />} />
                         <Route path="ai-tools" element={<RecruiterAiToolsPage />} />
+                        <Route path="settings" element={<PrivacySecurityPage />} />
                     </Route>
                 </Route>
 
@@ -171,6 +177,7 @@ export function AppRouter() {
                         <Route path="jobs" element={<AdminJobsModerationPage />} />
                         <Route path="jobs/moderation" element={<AdminJobsModerationPage />} />
                         <Route path="applications" element={<AdminApplicationsPage />} />
+                        <Route path="audit-logs" element={<AdminAuditLogsPage />} />
                         <Route path="broadcast" element={<AdminNotificationsPage />} />
                         <Route path="notifications" element={<NotificationsPage />} />
                         <Route path="analytics" element={<AdminAnalyticsPage />} />

@@ -1,179 +1,179 @@
 import api from './api';
+import { ASSESSMENT_CATALOG, ASSESSMENT_QUESTIONS_MAP } from '../data/assessmentsData';
+
+const LOCAL_STORAGE_BADGES_KEY = 'hirehub_candidate_badges';
+
+const getStoredBadges = () => {
+    try {
+        const stored = localStorage.getItem(LOCAL_STORAGE_BADGES_KEY);
+        return stored ? JSON.parse(stored) : [];
+    } catch {
+        return [];
+    }
+};
+
+const saveStoredBadge = (badge) => {
+    try {
+        const existing = getStoredBadges();
+        const filtered = existing.filter(
+            (b) => b.topicId !== badge.topicId && b.skillName !== badge.skillName
+        );
+        filtered.push(badge);
+        localStorage.setItem(LOCAL_STORAGE_BADGES_KEY, JSON.stringify(filtered));
+    } catch (err) {
+        console.warn('Could not persist badge locally:', err);
+    }
+};
 
 export const assessmentService = {
-    // Get catalog of all available assessments
+    // Get catalog of all available assessments (18 trending domains)
     async getAllAssessments() {
+        const storedBadges = getStoredBadges();
+        const passedTopicIds = new Set(
+            storedBadges.filter((b) => b.isPassed).map((b) => b.topicId)
+        );
+
         try {
             const response = await api.get('/assessments');
-            return response.data;
+            if (Array.isArray(response.data) && response.data.length >= 10) {
+                return response.data.map((item) => ({
+                    ...item,
+                    alreadyPassed: passedTopicIds.has(item.topicId) || item.alreadyPassed
+                }));
+            }
         } catch (error) {
-            console.warn('[AssessmentService] Fallback to local catalog:', error.message);
-            return [
-                {
-                    topicId: 'java-spring',
-                    title: 'Java 17 & Spring Boot Core',
-                    category: 'Backend Engineering',
-                    description: 'Assess your knowledge of Java 17 features, Spring Boot 3 internals, Spring Data JPA, and transactional semantics.',
-                    icon: '☕',
-                    durationMinutes: 5,
-                    passingScorePercentage: 70,
-                    totalQuestions: 5,
-                    alreadyPassed: false
-                },
-                {
-                    topicId: 'react',
-                    title: 'React 18 & Modern Web Architecture',
-                    category: 'Frontend Engineering',
-                    description: 'Validate proficiency in modern React hooks, reconciliation, concurrent rendering, and performant state handling.',
-                    icon: '⚛️',
-                    durationMinutes: 5,
-                    passingScorePercentage: 70,
-                    totalQuestions: 5,
-                    alreadyPassed: false
-                },
-                {
-                    topicId: 'postgresql',
-                    title: 'PostgreSQL & Database Design',
-                    category: 'Database & Infrastructure',
-                    description: 'Demonstrate mastery of relational indexing, execution plans, ACID transactions, and schema normalization.',
-                    icon: '🐘',
-                    durationMinutes: 5,
-                    passingScorePercentage: 70,
-                    totalQuestions: 5,
-                    alreadyPassed: false
-                },
-                {
-                    topicId: 'system-design',
-                    title: 'System Design & Distributed Systems',
-                    category: 'Architecture & Scalability',
-                    description: 'Test system scalability principles: caching strategies, CAP theorem, idempotency, and message brokers.',
-                    icon: '🏛️',
-                    durationMinutes: 5,
-                    passingScorePercentage: 70,
-                    totalQuestions: 5,
-                    alreadyPassed: false
-                },
-                {
-                    topicId: 'python-devops',
-                    title: 'Python, Docker & CI/CD Pipelines',
-                    category: 'DevOps & Automation',
-                    description: 'Assess knowledge of containerization, multistage Docker builds, CI/CD pipelines, and Python production engineering.',
-                    icon: '🐳',
-                    durationMinutes: 5,
-                    passingScorePercentage: 70,
-                    totalQuestions: 5,
-                    alreadyPassed: false
-                }
-            ];
+            console.debug('[AssessmentService] Using comprehensive catalog:', error.message);
         }
+
+        // Return comprehensive 18-domain assessment catalog
+        return ASSESSMENT_CATALOG.map((item) => ({
+            ...item,
+            alreadyPassed: passedTopicIds.has(item.topicId) || item.alreadyPassed
+        }));
     },
 
-    // Get questions for a specific quiz (without answers)
+    // Get questions for a specific quiz
     async getAssessmentQuestions(topicId) {
         try {
             const response = await api.get(`/assessments/${topicId}`);
-            return response.data;
+            if (response.data && response.data.questions && response.data.questions.length > 0) {
+                return response.data;
+            }
         } catch (error) {
-            console.warn('[AssessmentService] Fallback to local questions:', error.message);
-            const fallbackQuestions = {
-                'java-spring': {
-                    topicId: 'java-spring',
-                    title: 'Java 17 & Spring Boot Core',
-                    category: 'Backend Engineering',
-                    durationMinutes: 5,
-                    passingScorePercentage: 70,
-                    totalQuestions: 5,
-                    questions: [
-                        {
-                            id: 1,
-                            question: 'What is the primary benefit of Java 21/17 Virtual Threads (Project Loom) compared to platform threads?',
-                            options: [
-                                'They run at kernel priority level',
-                                'They are lightweight, managed by the JVM, and allow millions of concurrent tasks with low memory footprint',
-                                'They bypass the garbage collector entirely',
-                                'They replace the need for asynchronous programming in all languages'
-                            ]
-                        },
-                        {
-                            id: 2,
-                            question: 'In Spring Data JPA, which propagation mode in @Transactional creates a new physical transaction suspending the current one if one exists?',
-                            options: [
-                                'PROPAGATION_REQUIRED',
-                                'PROPAGATION_NESTED',
-                                'PROPAGATION_REQUIRES_NEW',
-                                'PROPAGATION_SUPPORTS'
-                            ]
-                        },
-                        {
-                            id: 3,
-                            question: 'What does the @Component annotation stereotype designate in the Spring IoC container?',
-                            options: [
-                                'A managed Spring bean eligible for component scanning and dependency injection',
-                                'A JPA entity automatically mapped to an RDBMS table',
-                                'A scheduled batch job executed asynchronously',
-                                'A secure endpoint accessible only to ADMIN roles'
-                            ]
-                        },
-                        {
-                            id: 4,
-                            question: 'Which HTTP status code is most appropriate when a requested resource is created successfully via POST?',
-                            options: ['200 OK', '201 Created', '202 Accepted', '204 No Content']
-                        },
-                        {
-                            id: 5,
-                            question: 'In Hibernate/JPA, how can you solve the N+1 select problem when fetching related entities?',
-                            options: [
-                                'Disable caching in application.properties',
-                                'Use JOIN FETCH in JPQL or @EntityGraph to fetch associations in a single query',
-                                'Always use FetchType.EAGER on every relationship',
-                                'Set the database isolation level to SERIALIZABLE'
-                            ]
-                        }
-                    ]
-                }
-            };
-            return fallbackQuestions[topicId] || fallbackQuestions['java-spring'];
+            console.debug('[AssessmentService] Using local quiz questions:', error.message);
         }
+
+        const quizData = ASSESSMENT_QUESTIONS_MAP[topicId] || ASSESSMENT_QUESTIONS_MAP['java-spring'];
+        return {
+            topicId: quizData.topicId,
+            title: quizData.title,
+            category: quizData.category,
+            durationMinutes: quizData.durationMinutes || 5,
+            passingScorePercentage: quizData.passingScorePercentage || 70,
+            totalQuestions: quizData.questions.length,
+            // Return questions with options for the runner
+            questions: quizData.questions.map((q) => ({
+                id: q.id,
+                question: q.question,
+                options: q.options
+            }))
+        };
     },
 
-    // Submit quiz answers for grading
+    // Submit quiz answers for grading and genuine answer breakdown
     async submitAssessment(topicId, answers) {
+        const quizData = ASSESSMENT_QUESTIONS_MAP[topicId] || ASSESSMENT_QUESTIONS_MAP['java-spring'];
+        const questions = quizData.questions || [];
+        const totalQuestions = questions.length || 5;
+
+        let correctCount = 0;
+        const questionResults = questions.map((q) => {
+            const userSelected = answers[q.id] !== undefined ? Number(answers[q.id]) : null;
+            const isCorrect = userSelected === q.correctOptionIndex;
+            if (isCorrect) correctCount++;
+
+            return {
+                id: q.id,
+                question: q.question,
+                options: q.options,
+                userSelected,
+                correctOptionIndex: q.correctOptionIndex,
+                genuineAnswer: q.options[q.correctOptionIndex],
+                isCorrect,
+                explanation: q.explanation
+            };
+        });
+
+        const scorePercentage = Math.round((correctCount / totalQuestions) * 100);
+        const passed = scorePercentage >= (quizData.passingScorePercentage || 70);
+
+        const badge = passed
+            ? {
+                  id: `badge-${topicId}-${Date.now()}`,
+                  topicId,
+                  skillName: quizData.title,
+                  badgeTitle: quizData.badgeTitle || `Verified ${quizData.title}`,
+                  score: scorePercentage,
+                  isPassed: true,
+                  issuedAt: new Date().toISOString()
+              }
+            : null;
+
+        if (badge) {
+            saveStoredBadge(badge);
+        }
+
+        const localResult = {
+            topicId,
+            title: quizData.title,
+            category: quizData.category,
+            totalQuestions,
+            correctCount,
+            scorePercentage,
+            passed,
+            feedback: passed
+                ? `Outstanding! You scored ${scorePercentage}%, demonstrating strong mastery in ${quizData.title}. Your verified badge has been issued!`
+                : `You scored ${scorePercentage}%. The passing threshold is 70%. Review the genuine answers and technical explanations below to sharpen your knowledge.`,
+            badge,
+            questionResults
+        };
+
+        // Try pushing to backend if online
         try {
             const response = await api.post(`/assessments/${topicId}/submit`, {
                 topicId,
                 answers
             });
-            return response.data;
+            if (response.data) {
+                return {
+                    ...response.data,
+                    questionResults, // Ensure genuine answer breakdown is always preserved
+                    feedback: response.data.feedback || localResult.feedback,
+                    badge: response.data.badge || localResult.badge
+                };
+            }
         } catch (error) {
-            console.warn('[AssessmentService] Fallback calculation:', error.message);
-            // Local fallback calculator for offline testing
-            return {
-                topicId,
-                title: 'Java 17 & Spring Boot Core',
-                totalQuestions: 5,
-                correctCount: 4,
-                scorePercentage: 80.0,
-                passed: true,
-                feedback: 'Excellent job! You demonstrated mastery of Java 17 & Spring Boot Core and earned the verified skill badge.',
-                badge: {
-                    skillName: 'Java 17 & Spring Boot Core',
-                    badgeTitle: 'Verified Java & Spring Boot Developer',
-                    score: 80.0,
-                    isPassed: true,
-                    issuedAt: new Date().toISOString()
-                }
-            };
+            console.debug('[AssessmentService] Backend submit fallback:', error.message);
         }
+
+        return localResult;
     },
 
-    // Get current candidate's badges
+    // Get current candidate's badges (merged with local storage)
     async getMyBadges() {
+        const localBadges = getStoredBadges();
         try {
             const response = await api.get('/assessments/badges/me');
-            return response.data;
-        } catch (error) {
-            return [];
+            if (Array.isArray(response.data) && response.data.length > 0) {
+                const map = new Map();
+                localBadges.forEach((b) => map.set(b.topicId || b.skillName, b));
+                response.data.forEach((b) => map.set(b.topicId || b.skillName, b));
+                return Array.from(map.values());
+            }
+        } catch {
+            // Backend offline, return local stored badges
         }
+        return localBadges;
     },
 
     // Get badges for any candidate
@@ -181,8 +181,8 @@ export const assessmentService = {
         try {
             const response = await api.get(`/assessments/badges/candidate/${candidateId}`);
             return response.data;
-        } catch (error) {
-            return [];
+        } catch {
+            return getStoredBadges();
         }
     }
 };

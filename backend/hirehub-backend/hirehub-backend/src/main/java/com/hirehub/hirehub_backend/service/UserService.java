@@ -34,4 +34,6 @@ public interface UserService {
     UserResponseDTO updateUserRole(UUID id, RoleType newRole);
 
     UserResponseDTO updateUserStatus(UUID id, com.hirehub.hirehub_backend.enums.UserStatus status);
+
+    void updateTwoFactorStatus(UUID supabaseUserId, boolean enabled);
 }

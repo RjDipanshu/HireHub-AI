@@ -22,7 +22,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Service
+@Service("unifiedJobMatchingService")
 @RequiredArgsConstructor
 public class JobMatchingService {
 

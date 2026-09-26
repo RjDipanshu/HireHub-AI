@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sparkles, Briefcase, User, LogOut, Menu, X, LayoutDashboard, TrendingUp, Building2, Shield, ChevronDown, Check, LifeBuoy } from 'lucide-react';
+import { Sparkles, Briefcase, User, LogOut, Menu, X, LayoutDashboard, TrendingUp, Building2, Shield, ChevronDown, Check, LifeBuoy, Sun, Moon, Monitor } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 export const Navbar = () => {
   const { isAuthenticated, user, profile, role, logout, getDashboardPath, switchRole } = useAuth();
+  const { theme, preference, toggleTheme, isDark } = useTheme();
+  const { lang, changeLanguage, t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const roleMenuRef = useRef(null);
@@ -63,8 +67,8 @@ export const Navbar = () => {
         position: 'sticky',
         top: 0,
         zIndex: 50,
-        background: '#ffffff',
-        borderBottom: '1px solid #e5e7eb',
+        background: isDark ? '#1e293b' : '#ffffff',
+        borderBottom: `1px solid ${isDark ? '#334155' : '#e5e7eb'}`,
         padding: '0.75rem 1.75rem',
       }}
     >
@@ -101,13 +105,13 @@ export const Navbar = () => {
         {/* Desktop Navigation Links */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }} className="desktop-nav">
           <Link to="/jobs" style={{ color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.925rem', display: 'flex', alignItems: 'center', gap: '0.4rem', textDecoration: 'none' }}>
-            <Briefcase size={16} /> Explore Jobs
+            <Briefcase size={16} /> {t('nav.explore_jobs', 'Explore Jobs')}
           </Link>
           <Link to="/salaries" style={{ color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.925rem', display: 'flex', alignItems: 'center', gap: '0.4rem', textDecoration: 'none' }}>
-            <TrendingUp size={16} color="var(--primary-500, #6366f1)" /> Salaries
+            <TrendingUp size={16} color="var(--primary-500, #6366f1)" /> {t('nav.salaries', 'Salaries')}
           </Link>
           <Link to="/support" style={{ color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.925rem', display: 'flex', alignItems: 'center', gap: '0.4rem', textDecoration: 'none' }}>
-            <LifeBuoy size={16} color="var(--color-primary)" /> Support
+            <LifeBuoy size={16} color="var(--color-primary)" /> {t('nav.support', 'Support')}
           </Link>
 
           {isAuthenticated ? (
@@ -207,6 +211,38 @@ export const Navbar = () => {
                 <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: 600 }}>
                   {profile?.fullName || user?.email?.split('@')[0]}
                 </span>
+                {/* Language Selector */}
+                <select
+                  value={lang}
+                  onChange={(e) => changeLanguage(e.target.value)}
+                  title="Select Language"
+                  aria-label="Select Language"
+                  style={{
+                    padding: '0.3rem 0.5rem',
+                    borderRadius: '6px',
+                    border: '1px solid var(--border-subtle)',
+                    background: isDark ? '#1e293b' : '#f8fafc',
+                    color: 'var(--text-primary)',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <option value="en">🇺🇸 EN</option>
+                  <option value="hi">🇮🇳 हिंदी</option>
+                  <option value="es">🇪🇸 ES</option>
+                </select>
+
+                {/* Theme Toggle Button */}
+                <button
+                  onClick={toggleTheme}
+                  className="btn btn-secondary btn-sm"
+                  title={`Theme: ${preference} (click to toggle)`}
+                  aria-label={`Current theme: ${preference}. Click to toggle.`}
+                  style={{ padding: '0.35rem 0.6rem', color: 'var(--text-secondary)' }}
+                >
+                  {preference === 'dark' ? <Moon size={15} /> : preference === 'light' ? <Sun size={15} /> : <Monitor size={15} />}
+                </button>
                 <button
                   onClick={handleLogout}
                   className="btn btn-secondary btn-sm"
@@ -220,11 +256,42 @@ export const Navbar = () => {
             </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              {/* Language Selector */}
+              <select
+                value={lang}
+                onChange={(e) => changeLanguage(e.target.value)}
+                title="Select Language"
+                aria-label="Select Language"
+                style={{
+                  padding: '0.3rem 0.5rem',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-subtle)',
+                  background: isDark ? '#1e293b' : '#f8fafc',
+                  color: 'var(--text-primary)',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                <option value="en">🇺🇸 EN</option>
+                <option value="hi">🇮🇳 हिंदी</option>
+                <option value="es">🇪🇸 ES</option>
+              </select>
+
+              <button
+                onClick={toggleTheme}
+                className="btn btn-secondary btn-sm"
+                title={`Theme: ${preference}`}
+                aria-label={`Current theme: ${preference}. Click to toggle.`}
+                style={{ padding: '0.35rem 0.6rem', color: 'var(--text-secondary)' }}
+              >
+                {preference === 'dark' ? <Moon size={15} /> : preference === 'light' ? <Sun size={15} /> : <Monitor size={15} />}
+              </button>
               <Link to="/login" className="btn btn-outline btn-sm">
-                Sign In
+                {t('nav.sign_in', 'Sign In')}
               </Link>
               <Link to="/register" className="btn btn-primary btn-sm">
-                Get Started
+                {t('nav.get_started', 'Get Started')}
               </Link>
             </div>
           )}
@@ -252,11 +319,11 @@ export const Navbar = () => {
           style={{
             marginTop: '0.75rem',
             padding: '1rem 0.5rem',
-            borderTop: '1px solid #e5e7eb',
+            borderTop: `1px solid ${isDark ? '#334155' : '#e5e7eb'}`,
             display: 'flex',
             flexDirection: 'column',
             gap: '0.85rem',
-            background: '#ffffff',
+            background: isDark ? '#1e293b' : '#ffffff',
           }}
         >
           <Link

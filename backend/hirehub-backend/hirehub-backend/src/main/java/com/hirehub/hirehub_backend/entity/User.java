@@ -50,4 +50,7 @@ public class User extends BaseEntity {
 
     @Column(name = "email_verified", nullable = false)
     private Boolean emailVerified = false;
+
+    @Column(name = "two_factor_enabled", nullable = false)
+    private Boolean twoFactorEnabled = false;
 }

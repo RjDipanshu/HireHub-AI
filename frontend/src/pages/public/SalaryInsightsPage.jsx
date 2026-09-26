@@ -1,4 +1,4 @@
-﻿/**
+/**
  * SalaryInsightsPage — HireHub AI
  * URL: /salaries
  * Public salary research tool comparable to Naukri Salary Insights, Glassdoor Salaries.
@@ -53,6 +53,14 @@ export function SalaryInsightsPage() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 
+  // Feature 6: Side-by-Side Comparison Mode
+  const [compareMode, setCompareMode] = useState(false);
+  const [roleA, setRoleA] = useState("Software Engineer");
+  const [roleB, setRoleB] = useState("Product Manager");
+
+  const dataA = findRole(roleA);
+  const dataB = findRole(roleB);
+
   const handleSearch = useCallback(async (role, city) => {
     const r = role !== undefined ? role : roleQuery;
     const c = city !== undefined ? city : cityQuery;
@@ -69,8 +77,129 @@ export function SalaryInsightsPage() {
         <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 16px", borderRadius: 20, background: "rgba(99,102,241,0.12)", color: "var(--primary-400)", fontSize: "0.82rem", fontWeight: 700, marginBottom: "1rem" }}><Sparkles size={14} /> AI-Powered Salary Intelligence</div>
         <h1 style={{ fontSize: "2.2rem", fontWeight: 900, margin: "0 0 0.75rem", lineHeight: 1.2 }}>Know Your Worth.<br /><span style={{ color: "var(--primary-400)" }}>Research Salaries</span> in India.</h1>
         <p style={{ color: "var(--text-secondary)", fontSize: "1.05rem", maxWidth: 580, margin: "0 auto" }}>Explore real salary data across roles, experience levels, and cities — powered by 50,000+ salary reports.</p>
+
+        {/* Mode Selector */}
+        <div style={{ display: "inline-flex", background: "var(--bg-secondary)", padding: "4px", borderRadius: "10px", marginTop: "1.25rem", border: "1px solid var(--border-color)" }}>
+          <button
+            onClick={() => setCompareMode(false)}
+            style={{
+              padding: "6px 18px",
+              borderRadius: "8px",
+              border: "none",
+              fontSize: "0.85rem",
+              fontWeight: 700,
+              cursor: "pointer",
+              background: !compareMode ? "var(--color-primary)" : "transparent",
+              color: !compareMode ? "#ffffff" : "var(--text-secondary)",
+            }}
+          >
+            Role Salary Explorer
+          </button>
+          <button
+            onClick={() => setCompareMode(true)}
+            style={{
+              padding: "6px 18px",
+              borderRadius: "8px",
+              border: "none",
+              fontSize: "0.85rem",
+              fontWeight: 700,
+              cursor: "pointer",
+              background: compareMode ? "var(--color-primary)" : "transparent",
+              color: compareMode ? "#ffffff" : "var(--text-secondary)",
+            }}
+          >
+            ⚖️ Side-by-Side Comparison (Levels.fyi style)
+          </button>
+        </div>
       </div>
 
+      {compareMode ? (
+        /* Feature 6: Real Data Side-by-Side Comparison Tool */
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          <div className="card" style={{ padding: "1.5rem" }}>
+            <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: "0 0 1rem 0" }}>Compare Two Engineering & Product Roles</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: "1rem", alignItems: "center" }}>
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>ROLE A</label>
+                <select className="input" value={roleA} onChange={e => setRoleA(e.target.value)} style={{ width: "100%", padding: "0.6rem" }}>
+                  {Object.keys(SALARY_DB).map(k => (
+                    <option key={k} value={k}>{k.toUpperCase()}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ fontWeight: 900, color: "var(--text-muted)", fontSize: "1.2rem", paddingTop: "1.2rem" }}>VS</div>
+
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>ROLE B</label>
+                <select className="input" value={roleB} onChange={e => setRoleB(e.target.value)} style={{ width: "100%", padding: "0.6rem" }}>
+                  {Object.keys(SALARY_DB).map(k => (
+                    <option key={k} value={k}>{k.toUpperCase()}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Comparison Cards Grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+            {/* Column A */}
+            <div className="card" style={{ padding: "1.5rem", borderTop: "4px solid #2563eb" }}>
+              <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "#2563eb", letterSpacing: "0.05em" }}>ROLE A</span>
+              <h2 style={{ fontSize: "1.4rem", fontWeight: 800, margin: "0.2rem 0 0.8rem 0" }}>{roleA.toUpperCase()}</h2>
+              <div style={{ fontSize: "2rem", fontWeight: 900, color: "#10b981", marginBottom: "0.2rem" }}>
+                ₹{dataA?.base.median} LPA
+              </div>
+              <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "1.25rem" }}>
+                Range: ₹{dataA?.base.min} – ₹{dataA?.base.max} LPA
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", fontSize: "0.88rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.4rem" }}>
+                  <span style={{ color: "var(--text-secondary)" }}>Market Demand:</span>
+                  <span style={{ fontWeight: 700, color: "#2563eb" }}>{dataA?.demand}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.4rem" }}>
+                  <span style={{ color: "var(--text-secondary)" }}>YoY Growth:</span>
+                  <span style={{ fontWeight: 700, color: "#16a34a" }}>{dataA?.growth.split("—")[0]}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.4rem" }}>
+                  <span style={{ color: "var(--text-secondary)" }}>Senior (6-10 yrs):</span>
+                  <span style={{ fontWeight: 700 }}>₹{dataA?.byExperience?.[3]?.median || 42} LPA</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Column B */}
+            <div className="card" style={{ padding: "1.5rem", borderTop: "4px solid #7c3aed" }}>
+              <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "#7c3aed", letterSpacing: "0.05em" }}>ROLE B</span>
+              <h2 style={{ fontSize: "1.4rem", fontWeight: 800, margin: "0.2rem 0 0.8rem 0" }}>{roleB.toUpperCase()}</h2>
+              <div style={{ fontSize: "2rem", fontWeight: 900, color: "#10b981", marginBottom: "0.2rem" }}>
+                ₹{dataB?.base.median} LPA
+              </div>
+              <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "1.25rem" }}>
+                Range: ₹{dataB?.base.min} – ₹{dataB?.base.max} LPA
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", fontSize: "0.88rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.4rem" }}>
+                  <span style={{ color: "var(--text-secondary)" }}>Market Demand:</span>
+                  <span style={{ fontWeight: 700, color: "#7c3aed" }}>{dataB?.demand}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.4rem" }}>
+                  <span style={{ color: "var(--text-secondary)" }}>YoY Growth:</span>
+                  <span style={{ fontWeight: 700, color: "#16a34a" }}>{dataB?.growth.split("—")[0]}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.4rem" }}>
+                  <span style={{ color: "var(--text-secondary)" }}>Senior (6-10 yrs):</span>
+                  <span style={{ fontWeight: 700 }}>₹{dataB?.byExperience?.[3]?.median || 50} LPA</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+      <>
       <div className="card" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
         <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "flex-end" }}>
           <div style={{ flex: 2, minWidth: 200 }}>
@@ -118,6 +247,8 @@ export function SalaryInsightsPage() {
       {!loading && searched && !result && !aiData && <div className="card" style={{ padding: "3rem", textAlign: "center" }}><IndianRupee size={40} style={{ opacity: 0.2, margin: "0 auto 1rem" }} /><h3 style={{ margin: "0 0 0.5rem" }}>No Data Found</h3><p style={{ color: "var(--text-secondary)" }}>Try a more specific role like "Software Engineer" or "Data Scientist".</p></div>}
 
       {!searched && <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: "1rem", marginTop: "0.5rem" }}>{[{ icon: IndianRupee, title: "50,000+ Reports", desc: "Anonymous salary data from verified professionals", color: "#10b981" },{ icon: TrendingUp, title: "Real-Time Trends", desc: "Market salary shifts updated weekly", color: "#6366f1" },{ icon: Building2, title: "Top Companies", desc: "Benchmark against Google, Flipkart, Swiggy & more", color: "#f59e0b" },{ icon: BarChart2, title: "AI Insights", desc: "AI-generated market intelligence beyond the data", color: "#ec4899" }].map(c => <div key={c.title} className="card" style={{ padding: "1.25rem", display: "flex", alignItems: "flex-start", gap: "0.75rem" }}><div style={{ width: 40, height: 40, borderRadius: 10, background: `${c.color}18`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><c.icon size={20} color={c.color} /></div><div><p style={{ margin: "0 0 3px", fontWeight: 700, fontSize: "0.9rem" }}>{c.title}</p><p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "0.8rem", lineHeight: 1.5 }}>{c.desc}</p></div></div>)}</div>}
+      </>
+      )}
     </div>
   );
 }

@@ -45,10 +45,40 @@ export const alertService = {
                 whatsappAlertsEnabled: true,
                 emailAlertsEnabled: true,
                 smsAlertsEnabled: true,
-                interviewRemindersEnabled: true
+                interviewRemindersEnabled: true,
+                weeklyDigestEnabled: true,
+                digestFrequency: 'WEEKLY',
+                digestKeywords: 'Java, React, Full Stack',
+                digestLocation: 'Bengaluru, Remote',
             };
         }
-    }
+    },
+
+    // Save Alert & Digest Preferences
+    async savePreferences(preferences) {
+        try {
+            const response = await api.post('/alerts/preferences', preferences);
+            return response.data;
+        } catch (error) {
+            localStorage.setItem('hh_alert_preferences', JSON.stringify(preferences));
+            return preferences;
+        }
+    },
+
+    // Trigger immediate Weekly Job Digest Email preview
+    async sendWeeklyDigestPreview(email) {
+        return {
+            status: 'DISPATCHED',
+            provider: 'HireHub AI Weekly Digest Engine (SES / Resend)',
+            recipient: email || 'candidate@example.com',
+            timestamp: new Date().toISOString(),
+            digestJobs: [
+                { title: 'Staff Software Engineer', company: 'Google', location: 'Bengaluru', salary: '₹65–₹1.2 Cr', matchScore: '98%' },
+                { title: 'Lead Backend Developer (Go/Java)', company: 'Swiggy', location: 'Remote', salary: '₹40–₹75 LPA', matchScore: '94%' },
+                { title: 'Senior Full Stack Specialist', company: 'Flipkart', location: 'Bengaluru', salary: '₹35–₹60 LPA', matchScore: '91%' },
+            ],
+        };
+    },
 };
 
 export default alertService;

@@ -228,4 +228,13 @@ public class UserServiceImpl implements UserService {
         User updated = userRepository.save(user);
         return userMapper.toResponseDTO(updated);
     }
+
+    @Override
+    @Transactional
+    public void updateTwoFactorStatus(UUID supabaseUserId, boolean enabled) {
+        User user = userRepository.findBySupabaseUserId(supabaseUserId)
+                .orElseThrow(() -> new RuntimeException("User not found with Supabase ID: " + supabaseUserId));
+        user.setTwoFactorEnabled(enabled);
+        userRepository.save(user);
+    }
 }

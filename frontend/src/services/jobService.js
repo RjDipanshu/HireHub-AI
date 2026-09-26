@@ -1,4 +1,5 @@
 import api from './api.js';
+import INDIAN_TECH_JOBS from '../data/mockJobs.js';
 
 /**
  * Step 3.7: Job API Service
@@ -31,14 +32,22 @@ export const jobService = {
         return response.data;
     },
 
+
     /**
      * Get detailed job information by ID
      * Endpoint: GET /api/v1/jobs/{id}
      * @param {string} id - Job UUID
      */
     async getJobById(id) {
-        const response = await api.get(`/jobs/${id}`);
-        return response.data;
+        try {
+            const response = await api.get(`/jobs/${id}`);
+            if (response.data) return response.data;
+        } catch (err) {
+            console.debug('[JobService] API getJobById fallback for ID:', id);
+        }
+        const match = INDIAN_TECH_JOBS.find((j) => String(j.id) === String(id));
+        if (match) return match;
+        return null;
     },
 
     // --- Recruiter Job Management ---

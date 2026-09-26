@@ -2,10 +2,23 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HireHub AI — Next-Gen AI Recruitment Platform</title>
     <meta name="description" content="Match the world's top talent with visionary companies through AI-powered resume intelligence, instant job applications, and automated candidate pipelines." />
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#0a66c2" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="HireHub AI" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="HireHub AI" />
+    <meta name="msapplication-TileColor" content="#0a66c2" />
+    <meta name="msapplication-TileImage" content="/icons/icon-144x144.svg" />
+
     <!-- Fonts: Inter & Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,5 +27,33 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js', { scope: '/' })
+            .then((registration) => {
+              console.log('[PWA] Service Worker registered with scope:', registration.scope);
+
+              // Listen for updates
+              registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                if (newWorker) {
+                  newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                      // New content available — dispatch event for UI notification
+                      window.dispatchEvent(new CustomEvent('hirehub:sw-update', { detail: { registration } }));
+                    }
+                  });
+                }
+              });
+            })
+            .catch((error) => {
+              console.warn('[PWA] Service Worker registration failed:', error);
+            });
+        });
+      }
+    </script>
   </body>
 </html>

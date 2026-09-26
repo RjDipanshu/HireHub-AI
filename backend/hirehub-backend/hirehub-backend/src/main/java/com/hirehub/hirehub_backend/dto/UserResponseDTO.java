@@ -24,4 +24,23 @@ public class UserResponseDTO {
     private Boolean emailVerified;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Boolean twoFactorEnabled;
+
+    public UserResponseDTO(UUID id, UUID supabaseUserId, String firstName, String lastName,
+                           String email, String phone, String profileImageUrl, RoleType role,
+                           UserStatus status, Boolean emailVerified, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
+        this.supabaseUserId = supabaseUserId;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.phone = phone;
+        this.profileImageUrl = profileImageUrl;
+        this.role = role;
+        this.status = status;
+        this.emailVerified = emailVerified;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.twoFactorEnabled = false;
+    }
 }

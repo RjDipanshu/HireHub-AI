@@ -32,7 +32,7 @@ public class UserMapper {
         if (user == null) {
             return null;
         }
-        return new UserResponseDTO(
+        UserResponseDTO dto = new UserResponseDTO(
                 user.getId(),
                 user.getSupabaseUserId(),
                 user.getFirstName(),
@@ -46,5 +46,7 @@ public class UserMapper {
                 user.getCreatedAt(),
                 user.getUpdatedAt()
         );
+        dto.setTwoFactorEnabled(Boolean.TRUE.equals(user.getTwoFactorEnabled()));
+        return dto;
     }
 }

@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import jobService from '../../services/jobService';
 import recruiterService from '../../services/recruiterService';
+import reviewService from '../../services/reviewService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 // ─── Star Rating Helper ────────────────────────────────────────────────────
@@ -307,9 +308,29 @@ export const CompanyDetailsPage = () => {
         console.warn('Could not fetch jobs:', jErr);
       }
 
-      // Load social data — try API, fall back to demo seeds
+      // Load social reviews — try reviewService API, fall back to stored/demo seeds
+      let apiReviews = [];
+      try {
+        const revRes = await reviewService.getCompanyReviews(compId);
+        if (revRes && revRes.content && revRes.content.length > 0) {
+          apiReviews = revRes.content.map(r => ({
+            id: r.id,
+            reviewer: r.reviewerName || r.jobTitle || 'Employee',
+            rating: Math.round(r.rating || 5),
+            title: r.reviewTitle,
+            pros: r.pros,
+            cons: r.cons,
+            recommended: r.isRecommended !== false,
+            createdAt: r.createdAt ? r.createdAt.slice(0, 10) : 'Recent',
+            helpful: r.helpfulCount || 0,
+          }));
+        }
+      } catch (err) {
+        console.warn('API reviews fetch notice:', err);
+      }
+
       const storedReviews = (() => { try { return JSON.parse(localStorage.getItem(`hh_reviews_${compId}`) || '[]'); } catch { return []; } })();
-      setReviews([...storedReviews, ...(DEMO_REVIEWS[compId] || DEMO_REVIEWS[1])]);
+      setReviews([...apiReviews, ...storedReviews, ...(DEMO_REVIEWS[compId] || DEMO_REVIEWS[1])]);
       const storedInts = (() => { try { return JSON.parse(localStorage.getItem(`hh_interviews_${compId}`) || '[]'); } catch { return []; } })();
       setInterviewExps([...storedInts, ...(DEMO_INTERVIEWS[compId] || DEMO_INTERVIEWS[1])]);
     } finally {
@@ -317,7 +338,7 @@ export const CompanyDetailsPage = () => {
     }
   };
 
-  const handleSubmitReview = (e) => {
+  const handleSubmitReview = async (e) => {
     e.preventDefault();
     if (!reviewForm.title || !reviewForm.pros) return;
     const compId = id ? parseInt(id, 10) : 1;
@@ -326,6 +347,21 @@ export const CompanyDetailsPage = () => {
     setReviews(updated);
     const userAdded = updated.filter(r => r.id.startsWith('usr-r-'));
     try { localStorage.setItem(`hh_reviews_${compId}`, JSON.stringify(userAdded)); } catch {}
+
+    // Persist to backend if possible
+    try {
+      await reviewService.addCompanyReview(compId, {
+        reviewTitle: reviewForm.title,
+        rating: reviewForm.rating,
+        pros: reviewForm.pros,
+        cons: reviewForm.cons,
+        isRecommended: reviewForm.recommended,
+        jobTitle: reviewForm.reviewer || 'Employee',
+      });
+    } catch (apiErr) {
+      console.warn('Review saved locally, backend sync note:', apiErr?.message);
+    }
+
     setShowReviewModal(false);
     setReviewForm({ reviewer: '', rating: 4, title: '', pros: '', cons: '', recommended: true });
   };
