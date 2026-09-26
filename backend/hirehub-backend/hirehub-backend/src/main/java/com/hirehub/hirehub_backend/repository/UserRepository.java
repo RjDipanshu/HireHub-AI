@@ -11,6 +11,7 @@ import java.util.UUID;
 public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByIdAndIsDeletedFalse(UUID id);
     Optional<User> findByEmailAndIsDeletedFalse(String email);
+    Optional<User> findBySupabaseUserId(UUID supabaseUserId);
     Optional<User> findBySupabaseUserIdAndIsDeletedFalse(UUID supabaseUserId);
     List<User> findAllByIsDeletedFalse();
     List<User> findByRoleNameAndIsDeletedFalse(com.hirehub.hirehub_backend.enums.RoleType roleName);

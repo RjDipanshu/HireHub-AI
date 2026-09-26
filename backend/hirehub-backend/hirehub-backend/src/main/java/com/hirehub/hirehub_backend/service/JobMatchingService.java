@@ -49,4 +49,8 @@ public class JobMatchingService {
     public JobMatchResponse matchJobStructured(UUID supabaseUserId, UUID jobId) {
         return delegate.matchJob(supabaseUserId, jobId);
     }
+
+    public JobMatchResponseDTO matchCandidateToJob(UUID supabaseUserId, UUID jobId) {
+        return matchJob(supabaseUserId, jobId);
+    }
 }

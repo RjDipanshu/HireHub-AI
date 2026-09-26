@@ -670,7 +670,7 @@ export const CandidateAiToolsPage = () => {
           {/* Right Column: 1.0 AI Studio Results */}
           <div className="card card-ai lg:col-span-7" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <h3 style={{ fontSize: '1.2rem', margin: 0 }}>AI Resume Studio</h3>
+              <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Overall ATS Compatibility Score & AI Studio</h3>
               {resumeResult && (
                 <span className="badge badge-secondary" style={{ fontSize: '0.75rem' }}>
                   Model: {resumeResult.modelUsed || 'gemini-1.5-flash'}
