@@ -30,7 +30,7 @@
     "test:reset-password": "node scripts/test-reset-password.js",
     "test:signup-verification": "node scripts/test-signup-verification.js",
     "test:support-frontend": "node scripts/test-support-frontend.js",
-    "test:all": "npm run test:api && npm run test:rbac && npm run test:candidate && npm run test:candidate-flow && npm run test:recruiter && npm run test:admin && npm run test:ai && npm run test:resume-analyzer && npm run test:job-match && npm run test:storage && npm run test:notifications && npm run test:e2e && npm run test:docker-ci && npm run test:security-audit && npm run test:semantic-search && npm run test:ai-evaluation && npm run test:e2e-journeys && npm run test:ui-ux-audit && npm run test:forgot-password && npm run test:reset-password && npm run test:signup-verification && npm run test:support-frontend"
+    "test:all": "node scripts/run-all-tests.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.115.0",

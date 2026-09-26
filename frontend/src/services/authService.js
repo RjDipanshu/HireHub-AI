@@ -326,10 +326,11 @@ export const authService = {
      */
     async signInWithOAuth(provider) {
         try {
+            const redirectOrigin = (typeof window !== 'undefined' && window.location) ? window.location.origin : 'http://localhost:5173';
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider,
                 options: {
-                    redirectTo: `${window.location.origin}/auth/callback`,
+                    redirectTo: `${redirectOrigin}/auth/callback`,
                 },
             });
             if (error) throw error;

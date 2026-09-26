@@ -34,12 +34,15 @@ jobs:
           cache-dependency-path: './frontend/package-lock.json'
 
       - name: Install Dependencies
-        run: npm ci
+        run: npm ci || npm install
 
       - name: Execute Full Test Suite (10 Automated Suites)
         run: npm run test:all
         env:
           CI: true
+          VITE_API_BASE_URL: /api/v1
+          VITE_SUPABASE_URL: ${{ secrets['VITE_SUPABASE_URL'] || 'https://qbdcvnkomdzqfxevlhhj.supabase.co' }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets['VITE_SUPABASE_ANON_KEY'] || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.dummy' }}
 
       - name: Verify Production Vite Bundle
         run: npm run build
